@@ -1,0 +1,57 @@
+name: ভুল শব্দ জানান (Wrong word)
+description: Bou কোনো বাংলা বা আঞ্চলিক শব্দ ভুল লিখলে জানান।
+title: "ভুল শব্দ: "
+labels: ["wrong-word"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ধন্যবাদ! আপনার জানানো শব্দ সবার জন্য Bou-কে আরও ভালো করবে।
+  - type: input
+    id: said
+    attributes:
+      label: আপনি কী বলেছিলেন
+      description: যেভাবে মুখে বলেছিলেন, বাংলা বা ইংরেজি অক্ষরে।
+      placeholder: tui kodde jaibi
+    validations:
+      required: true
+  - type: input
+    id: wrote
+    attributes:
+      label: Bou কী লিখল
+      placeholder: তুই কোডে জাইবি
+    validations:
+      required: true
+  - type: input
+    id: expected
+    attributes:
+      label: ঠিক কী হওয়া উচিত ছিল
+      placeholder: তুই কোদ্দে যাইবি
+    validations:
+      required: true
+  - type: dropdown
+    id: region
+    attributes:
+      label: কোন এলাকার ভাষা
+      options:
+        - প্রমিত বাংলা
+        - চট্টগ্রাম
+        - সিলেট
+        - নোয়াখালী
+        - বরিশাল
+        - ঢাকা
+        - রাজশাহী
+        - রংপুর
+        - ময়মনসিংহ
+        - খুলনা
+        - অন্য এলাকা
+    validations:
+      required: true
+  - type: dropdown
+    id: ai
+    attributes:
+      label: AI মোড চালু ছিল?
+      options:
+        - না
+        - হ্যাঁ
+        - জানি না

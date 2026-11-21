@@ -145,6 +145,28 @@ public final class GboardPatchesSettingsActivity extends Activity
     private static final int REQUEST_OPEN_TEXT_DOCUMENT = 0x4743;
     private static final int REQUEST_OPEN_DOCUMENT_TREE = 0x4746;
     private static final int REQUEST_RUNTIME_PERMISSION = 0x4747;
+    private static final int REQUEST_UPDATE_NOTIFICATIONS = 0x4748;
+
+    /** Bou update notifications need this on Android 13+; ask once, the first time settings open. */
+    private void askForUpdateNotificationsOnce() {
+        try {
+            if (android.os.Build.VERSION.SDK_INT < 33) {
+                return;
+            }
+            String permission = android.Manifest.permission.POST_NOTIFICATIONS;
+            if (checkSelfPermission(permission) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+            SharedPreferences prefs = getSharedPreferences("bou_update_notifier", MODE_PRIVATE);
+            if (prefs.getBoolean("asked_notifications", false)) {
+                return;
+            }
+            prefs.edit().putBoolean("asked_notifications", true).apply();
+            requestPermissions(new String[] {permission}, REQUEST_UPDATE_NOTIFICATIONS);
+        } catch (Throwable ignored) {
+            // Notifications are optional; settings must open regardless.
+        }
+    }
     private static final int REQUEST_CREATE_BINARY_DOCUMENT = 0x4748;
     private static final int REQUEST_OPEN_BINARY_DOCUMENT = 0x4749;
     private static final int TOOLBAR_HEIGHT_DP = 56;
@@ -278,6 +300,7 @@ public final class GboardPatchesSettingsActivity extends Activity
     protected void onResume() {
         super.onResume();
         featureLifecycleEnabled = true;
+        askForUpdateNotificationsOnce();
         applyOrchestration(settingsOrchestrator.accept(
                 GboardPatchesSettingsOrchestrator.Event.resume()));
     }

@@ -132,6 +132,8 @@ internal fun applyGboardPatchesSettings(
     ensureManifestUsesPermission(manifestDocument, manifest, "android.permission.READ_EXTERNAL_STORAGE")
     // The in-app updater installs Bou's own signed releases.
     ensureManifestUsesPermission(manifestDocument, manifest, "android.permission.REQUEST_INSTALL_PACKAGES")
+    // Bou's daily update notification.
+    ensureManifestUsesPermission(manifestDocument, manifest, "android.permission.POST_NOTIFICATIONS")
 
     val activity = application.childElements("activity").firstOrNull {
         it.getAttributeNS(ANDROID_NS, "name") == GBOARD_PATCHES_SETTINGS_ACTIVITY_CLASS ||

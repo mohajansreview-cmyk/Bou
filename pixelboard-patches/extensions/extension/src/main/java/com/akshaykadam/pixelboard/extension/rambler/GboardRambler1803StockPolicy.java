@@ -73,6 +73,9 @@ public final class GboardRambler1803StockPolicy {
         GboardRamblerRotationGrace.ensureListening();
         // Rambler flags are read when the keyboard starts: warm up the Banglish word lists now.
         BanglishTransliterator.preloadAsync();
+        // Daily background check for a new Bou release (throttled, network off-thread).
+        com.akshaykadam.pixelboard.extension.updater.BouUpdateNotifier.maybeCheck(
+                GboardRambler1803OfficialSelectionRuntime.applicationContext());
         if (SHOW_RAMBLER_DICT_SETTINGS_FLAG.equals(flagName)) {
             return originalResult instanceof Boolean ? Boolean.TRUE : originalResult;
         }

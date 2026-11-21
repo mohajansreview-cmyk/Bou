@@ -42,6 +42,13 @@ with your own key. Bou itself collects nothing.
 See [docs/RELEASING.md](docs/RELEASING.md): JDK 21, Android SDK build-tools 36.1.0, a GitHub
 token with `read:packages`, and stock Gboard 18.6.3.100.
 
+## Contribute and contact
+
+- A Bengali or regional word came out wrong? [Report the word](https://github.com/mohajansreview-cmyk/Bou/issues/new?template=wrong-word.yml) — this grows the word list for everyone.
+- Bugs and ideas: [Issues](https://github.com/mohajansreview-cmyk/Bou/issues/new/choose). Questions: [Discussions](https://github.com/mohajansreview-cmyk/Bou/discussions).
+- Code: read [CONTRIBUTING.md](CONTRIBUTING.md).
+- Talk to the maker: [Subrata Mohajan](https://subrata.fedardokan.com).
+
 ## Licence and credits
 
 Bou is free software under the **GNU GPL v3.0** (see [LICENSE](LICENSE)).
