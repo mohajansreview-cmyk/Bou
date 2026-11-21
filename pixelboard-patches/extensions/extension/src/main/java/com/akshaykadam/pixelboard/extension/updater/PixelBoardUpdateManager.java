@@ -213,7 +213,7 @@ public final class PixelBoardUpdateManager {
                 connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 connection.setRequestProperty("Accept", "application/vnd.github.v3+json");
-                connection.setRequestProperty("User-Agent", "PixelBoard-Android-App");
+                connection.setRequestProperty("User-Agent", "Bou-Android-App");
                 connection.setConnectTimeout(10000);
                 connection.setReadTimeout(15000);
 
@@ -340,8 +340,8 @@ public final class PixelBoardUpdateManager {
         try {
             Uri downloadUri = Uri.parse(releaseInfo.getApkDownloadUrl());
             DownloadManager.Request request = new DownloadManager.Request(downloadUri);
-            request.setTitle("PixelBoard " + releaseInfo.getVersion());
-            request.setDescription("Downloading PixelBoard update...");
+            request.setTitle("Bou " + releaseInfo.getVersion());
+            request.setDescription("Downloading Bou update...");
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
             request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, releaseInfo.getApkFileName());
             request.setMimeType("application/vnd.android.package-archive");
@@ -354,7 +354,7 @@ public final class PixelBoardUpdateManager {
             }
 
             currentStatus = Status.DOWNLOADING;
-            Toast.makeText(activity, "Downloading PixelBoard v" + releaseInfo.getVersion() + "...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, "Downloading Bou v" + releaseInfo.getVersion() + "...", Toast.LENGTH_SHORT).show();
             if (onStateChanged != null) {
                 onStateChanged.run();
             }
@@ -455,7 +455,7 @@ public final class PixelBoardUpdateManager {
                 if (context instanceof Activity activity && !activity.isFinishing()) {
                     new AlertDialog.Builder(activity)
                             .setTitle("Install Permission Required")
-                            .setMessage("To install downloaded updates directly, PixelBoard needs permission to install unknown apps. Please allow it in the next screen.")
+                            .setMessage("To install downloaded updates directly, Bou needs permission to install unknown apps. Please allow it in the next screen.")
                             .setPositiveButton("Settings", (dialog, which) -> {
                                 Intent settingsIntent = new Intent(
                                         Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,

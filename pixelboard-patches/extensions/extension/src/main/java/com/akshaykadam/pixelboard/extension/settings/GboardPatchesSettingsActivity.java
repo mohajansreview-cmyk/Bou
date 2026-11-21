@@ -108,6 +108,7 @@ import com.akshaykadam.pixelboard.extension.R;
 import com.akshaykadam.pixelboard.extension.BuildConfig;
 import com.akshaykadam.pixelboard.extension.settings.keyboardpreview.GboardKeyboardPreviewController;
 import com.akshaykadam.pixelboard.extension.updater.PixelBoardUpdateFeature;
+import com.akshaykadam.pixelboard.extension.rambler.BouAiSettingsFeature;
 import com.akshaykadam.pixelboard.extension.updater.PixelBoardUpdateManager;
 
 public final class GboardPatchesSettingsActivity extends Activity
@@ -151,7 +152,7 @@ public final class GboardPatchesSettingsActivity extends Activity
     private static final String TOOLBAR_TITLE_PATCHES = "Patches";
     private static final String ABOUT_AUTHOR_URL = "https://github.com/Akshayykadam";
     private static final String ABOUT_PATCH_REPOSITORY_URL =
-            "https://github.com/Akshayykadam/PixelBoard";
+            "https://github.com/mohajansreview-cmyk/Bou";
     private static final String DOCUMENT_TYPE_FALLBACK = "text/plain";
     private static final String DOCUMENT_PICKER_FAILED = "Unable to open file picker.";
     private static final String DOCUMENT_WRITE_FAILED = "Failed to export file.";
@@ -1710,7 +1711,7 @@ public final class GboardPatchesSettingsActivity extends Activity
                 ViewGroup.LayoutParams.WRAP_CONTENT));
 
         footerVersionView = new TextView(this);
-        footerVersionView.setText("PixelBoard " + resolvePatchVersion());
+        footerVersionView.setText("Bou " + resolvePatchVersion());
         footerVersionView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f);
         footerVersionView.setTextColor(palette.textSecondary);
         footerVersionView.setGravity(Gravity.CENTER);
@@ -3205,6 +3206,24 @@ public final class GboardPatchesSettingsActivity extends Activity
 
         List<GboardPatchesSettingsContract.Section> sections =
                 new ArrayList<GboardPatchesSettingsContract.Section>();
+        // Bou's own screens (AI mode, updates) live in the feature registry; list them first.
+        List<GboardPatchesSettingsContract.Row> bouRows =
+                new ArrayList<GboardPatchesSettingsContract.Row>();
+        if (features != null) {
+            for (GboardPatchesSettingsContract.Feature feature : features) {
+                if (feature instanceof BouAiSettingsFeature
+                        || feature instanceof PixelBoardUpdateFeature) {
+                    bouRows.add(new GboardPatchesSettingsContract.NavigationRow(
+                            feature.getEntryTitle(),
+                            feature.getEntrySummary(),
+                            true,
+                            () -> feature.openRootEntry(this)));
+                }
+            }
+        }
+        if (!bouRows.isEmpty()) {
+            sections.add(new GboardPatchesSettingsContract.Section("Bou", bouRows));
+        }
         sections.add(new GboardPatchesSettingsContract.Section(
                 GboardSettingsText.get(context, R.string.gboard_patches_section_features),
                 rows));
@@ -3876,11 +3895,11 @@ public final class GboardPatchesSettingsActivity extends Activity
                 ViewGroup.LayoutParams.WRAP_CONTENT);
         card.addView(categoryLabel, catParams);
 
-        // Main Title (e.g. "PixelBoard v1.3.4")
+        // Main Title (e.g. "Bou v1.3.4")
         TextView titleView = new TextView(this);
         String displayTitle = section.getTitle();
         if (displayTitle == null || displayTitle.isEmpty()) {
-            displayTitle = "PixelBoard v1.3.4";
+            displayTitle = "Bou v1.3.4";
         }
         titleView.setText(displayTitle);
         titleView.setTextColor(palette.textPrimary);
