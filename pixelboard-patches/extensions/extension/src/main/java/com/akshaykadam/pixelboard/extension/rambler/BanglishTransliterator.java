@@ -42,6 +42,19 @@ public final class BanglishTransliterator {
     private static final Set<String> KEEP_ENGLISH = new HashSet<String>();
     /** Short particles the frequency lists get wrong ("laptop ta" is ল্যাপটপটা, not তা). */
     private static final Map<String, String> FORCE_BENGALI = new HashMap<String, String>();
+    /** English words ranked above this are function words, not loanwords. */
+    private static final int FUNCTION_WORD_RANK = 300;
+    /** Frequent English words that Bengali speakers do mix into Bengali sentences. */
+    private static final Set<String> COMMON_LOANWORDS = new HashSet<String>(java.util.Arrays.asList(
+            "time", "call", "phone", "ok", "okay", "sorry", "please", "thanks", "thank", "love",
+            "good", "nice", "problem", "family", "school", "friend", "life", "money", "job", "work",
+            "car", "home", "room", "game", "party", "team", "plan", "show", "boss", "sir", "madam",
+            "hello", "hi", "bye", "baby", "mind", "chance", "doctor", "police", "office", "ready",
+            "free", "fine", "busy", "class", "exam", "news", "story", "song", "movie", "picture",
+            "minute", "hour", "week", "date", "number", "name", "message", "help", "sure", "best",
+            "late", "new", "old", "big", "line", "start", "stop", "check", "open", "close", "next"));
+    /** Ranks at or above this come from the regional word list (see build_banglish_data.py). */
+    private static final int REGIONAL_RANK_BASE = 50000;
     /** A Bengali word must be this many times more frequent to beat an English reading. */
     private static final int BENGALI_RANK_FACTOR = 3;
 
@@ -312,7 +325,10 @@ public final class BanglishTransliterator {
             }
             Decision left = nearestDecided(all, k, -1);
             Decision right = nearestDecided(all, k, 1);
-            if (left == Decision.BENGALI || right == Decision.BENGALI) {
+            if (w.strictContext) {
+                w.useBengali = left != Decision.ENGLISH && right != Decision.ENGLISH
+                        && (left == Decision.BENGALI || right == Decision.BENGALI);
+            } else if (left == Decision.BENGALI || right == Decision.BENGALI) {
                 w.useBengali = true;
             } else if (left == Decision.ENGLISH || right == Decision.ENGLISH) {
                 w.useBengali = false;
@@ -350,9 +366,12 @@ public final class BanglishTransliterator {
     /** First non-ambiguous decision walking from {@code k} in direction {@code step}, or null. */
     private static Decision nearestDecided(List<Word> words, int k, int step) {
         for (int j = k + step; j >= 0 && j < words.size(); j += step) {
-            Decision d = words.get(j).decision;
-            if (d != Decision.AMBIGUOUS) {
-                return d;
+            Word other = words.get(j);
+            if (other.decision != Decision.AMBIGUOUS) {
+                return other.decision;
+            }
+            if (other.strictContext) {
+                return Decision.ENGLISH; // a common English word leans English ("I hate you")
             }
         }
         return null;
@@ -367,6 +386,8 @@ public final class BanglishTransliterator {
         final boolean known;
         /** Final choice, set in pass 2 of {@link #convert}. */
         boolean useBengali;
+        /** Bengali only when no neighbour is English (common English words like "you", "done"). */
+        boolean strictContext;
 
         Word(int start, String latin, Decision decision, String bengali) {
             this(start, latin, decision, bengali, true);
@@ -430,7 +451,21 @@ public final class BanglishTransliterator {
         if (dialect != null && (bn == null || (Integer) bn[1] * 20 > (Integer) dialect[1])) {
             bn = dialect;
         }
-        if (bn != null && en != null && AMBIGUOUS.contains(w)) {
+        // A regional Bengali word that is also a less common English word ("lay" = লায়)
+        // follows its neighbours instead of always losing to English.
+        boolean regionalVsEnglish = bn != null && en != null
+                && (Integer) bn[1] >= REGIONAL_RANK_BASE && en > 1000;
+        // Very common English words ("are", "he", "no") are rarely mixed into Bengali speech,
+        // so when one has a Bengali reading (আরে, হে, নো) its neighbours decide. Loanwords people
+        // do mix in (time, phone, call...) are listed in COMMON_LOANWORDS and stay English.
+        boolean functionWord = bn != null && en != null && en < FUNCTION_WORD_RANK
+                && !COMMON_LOANWORDS.contains(w);
+        if (functionWord && !AMBIGUOUS.contains(w) && !regionalVsEnglish) {
+            Word word = new Word(start, latin, Decision.AMBIGUOUS, (String) bn[0]);
+            word.strictContext = true; // "Thank you bhai" keeps "you"
+            return word;
+        }
+        if (bn != null && en != null && (AMBIGUOUS.contains(w) || regionalVsEnglish)) {
             return new Word(start, latin, Decision.AMBIGUOUS, (String) bn[0]);
         }
         if (bn != null && (en == null || (Integer) bn[1] * BENGALI_RANK_FACTOR < en)) {
@@ -518,6 +553,13 @@ public final class BanglishTransliterator {
      * A final "o" matches either (kemon / bolo).
      */
     static boolean endingMatches(String latin, String bengali) {
+        // The first sound must agree too: a Banglish vowel start (obay) needs a Bengali vowel
+        // start (ওবায়), a consonant start needs a consonant.
+        boolean latinVowelStart = isVowel(latin.charAt(0));
+        boolean bengaliVowelStart = "অআইঈউঊঋএঐওঔ".indexOf(bengali.charAt(0)) >= 0;
+        if (latinVowelStart != bengaliVowelStart) {
+            return false;
+        }
         char l = latin.charAt(latin.length() - 1);
         char b = bengali.charAt(bengali.length() - 1);
         switch (l) {
@@ -531,6 +573,8 @@ public final class BanglishTransliterator {
                 return b == 'ু' || b == 'ূ' || b == 'উ' || b == 'ঊ';
             case 'o':
                 return true;
+            case 'w':
+                return b == 'ো' || b == 'ও'; // kow -> কও
             default:
                 return "ািীুূৃেৈোৌআইঈউঊএঐওঔ".indexOf(b) < 0;
         }

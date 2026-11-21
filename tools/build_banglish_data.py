@@ -85,6 +85,7 @@ def java_literal(s):
 
 
 MAX_CANDIDATES = 4
+REGIONAL_RANK_BASE = 50000  # after the 50k standard words
 
 
 def main(bn_path, en_path):
@@ -99,6 +100,22 @@ def main(bn_path, en_path):
             cands = by_key.setdefault(key, [])
             if len(cands) < MAX_CANDIDATES:
                 cands.append(f"{word}\t{rank}")
+    # Regional words (tools/data/onubad_regional_words.txt) rank after every standard word, so a
+    # standard spelling wins a shared key and regional spellings fill keys standard Bengali lacks.
+    regional_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data",
+                                 "onubad_regional_words.txt")
+    regional = 0
+    if os.path.exists(regional_path):
+        with open(regional_path, encoding="utf-8") as f:
+            words = [ln.split("\t")[0] for ln in f if ln.strip() and not ln.startswith("#")]
+        for i, word in enumerate(words):
+            key = bn_key(word)
+            cands = by_key.setdefault(key, []) if key else None
+            if cands is not None and len(cands) < MAX_CANDIDATES \
+                    and not any(c.split("\t")[0] == word for c in cands):
+                cands.append(f"{word}\t{REGIONAL_RANK_BASE + i}")
+                regional += 1
+    print(f"regional words added: {regional}")
     bn_lines = [key + "\t" + "\t".join(c) for key, c in by_key.items()]
     en_lines = [f"{w}\t{r}" for w, r in load(en_path) if re.fullmatch(r"[a-z']+", w)]
 
