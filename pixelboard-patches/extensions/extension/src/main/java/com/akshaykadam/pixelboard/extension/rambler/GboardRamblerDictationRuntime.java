@@ -7,7 +7,10 @@
  */
 package com.akshaykadam.pixelboard.extension.rambler;
 
+import android.content.Context;
 import android.util.Log;
+import android.view.inputmethod.InputMethodManager;
+import android.view.inputmethod.InputMethodSubtype;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -122,6 +125,7 @@ public final class GboardRamblerDictationRuntime {
                 return;
             }
             List<?> spans = (List<?>) spansObj;
+            Boolean[] bengaliInput = {null}; // resolved at most once per call, only when needed
             for (Object span : spans) {
                 if (span == null) {
                     continue;
@@ -207,6 +211,13 @@ public final class GboardRamblerDictationRuntime {
                             && (spanText == null || spanText.isEmpty() || spanText.equals(textBefore))) {
                         textSpanField.set(span, transcript);
                     }
+                }
+
+                try {
+                    convertBanglishIfBengaliInput(
+                            action, span, intentField, textSpanField, textBefore, bengaliInput);
+                } catch (Throwable t) {
+                    Log.w(TAG, "Failed to convert Banglish dictation", t);
                 }
             }
         } catch (Throwable t) {
@@ -387,6 +398,66 @@ public final class GboardRamblerDictationRuntime {
             }
         }
         return sb.toString();
+    }
+
+    /**
+     * Rambler returns Bengali speech as Roman text (Banglish). When the Bengali keyboard is
+     * active, rewrite plain dictation spans into Bengali script offline. Spans that carry a
+     * speech diff (mid-text edits) are left alone so the diff still matches the field.
+     */
+    private static void convertBanglishIfBengaliInput(
+            Object action, Object span, Field intentField, Field textSpanField, String textBefore,
+            Boolean[] bengaliInput) throws IllegalAccessException {
+        int intent = intentField.getInt(action);
+        if (intent != 0 && intent != 5) {
+            return;
+        }
+        Field diffField = findField(action.getClass(), "e");
+        if (diffField != null && diffField.get(action) != null) {
+            return;
+        }
+        Object textObj = textSpanField.get(span);
+        if (!(textObj instanceof String)) {
+            return;
+        }
+        String text = (String) textObj;
+        if (!BanglishTransliterator.needsConversion(text)) {
+            return;
+        }
+        if (bengaliInput[0] == null) {
+            bengaliInput[0] = isBengaliInputActive(textBefore);
+        }
+        if (!bengaliInput[0]) {
+            return;
+        }
+        textSpanField.set(span, BanglishTransliterator.convert(text));
+    }
+
+    private static boolean isBengaliInputActive(String textBefore) {
+        try {
+            Context context = GboardRambler1803OfficialSelectionRuntime.applicationContext();
+            InputMethodManager imm = context == null
+                    ? null
+                    : (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+            InputMethodSubtype subtype = imm == null ? null : imm.getCurrentInputMethodSubtype();
+            if (subtype != null) {
+                String tag = subtype.getLanguageTag();
+                if (tag == null || tag.isEmpty()) {
+                    tag = subtype.getLocale();
+                }
+                if (tag != null && !tag.isEmpty()) {
+                    // A known non-Bengali keyboard never converts, even next to Bengali text.
+                    return tag.toLowerCase(Locale.ROOT).startsWith("bn");
+                }
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "Failed to read current keyboard language", t);
+        }
+        // Fallback only when no subtype language is reported: Bengali text right before the cursor.
+        String tail = textBefore == null || textBefore.length() <= 40
+                ? textBefore
+                : textBefore.substring(textBefore.length() - 40);
+        return BanglishTransliterator.containsBengali(tail);
     }
 
     private static Field findField(Class<?> clazz, String fieldName) {
