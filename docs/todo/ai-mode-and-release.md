@@ -56,3 +56,10 @@ Legal must-keeps (GPL-3.0):
 - Do not use Vashantor / Unified-Bangla: non-commercial licence conflicts with GPL.
 
 Current measured quality: 81.8% word accuracy on 2,940 romanized ONUBAD dialect sentences.
+
+## 4. Support the maker (next plan, owner 2026-11-22)
+
+- Add a "Buy me a coffee" style support option next to contributing: on the website
+  (/contribute and footer), in the GitHub README, and maybe a small row in Bou settings.
+- Options to compare first: bKash/Nagad merchant QR (local), Buy Me a Coffee, Ko-fi, GitHub
+  Sponsors. Owner decides; never put personal phone numbers or card details in the repo.

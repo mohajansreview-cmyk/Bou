@@ -56,9 +56,8 @@ public final class BouAiSettingsFeature implements GboardPatchesSettingsContract
                 "Gemini API key",
                 hasKey ? "বসানো আছে (…" + key.substring(Math.max(0, key.length() - 4)) + ")" : "বসানো নেই",
                 true,
-                () -> GboardPatchesSettingsContract.showTextInputDialog(host, "Gemini API key",
-                        "এখানে key paste করুন", "", value -> {
-                            String v = value == null ? "" : value.replaceAll("\s+", "");
+                () -> showKeyDialog(host, context, value -> {
+                            String v = value == null ? "" : value.replaceAll("\\s+", "");
                             SharedPreferences.Editor e = p.edit().putString(BouAiRewriter.KEY_API_KEY, v);
                             if (v.isEmpty()) {
                                 e.putBoolean(BouAiRewriter.KEY_ENABLED, false);
@@ -101,6 +100,23 @@ public final class BouAiSettingsFeature implements GboardPatchesSettingsContract
         return new GboardPatchesSettingsContract.Screen(TITLE, "Bou", TITLE,
                 "ইন্টারনেট না থাকলে বা সমস্যা হলে সাথে সাথে আগের মতো offline পদ্ধতি চলে।",
                 rows);
+    }
+
+    /**
+     * Opens the key box straight on the settings activity. Going through the settings
+     * orchestrator dropped the request for this screen, so the box never appeared.
+     */
+    private static void showKeyDialog(GboardPatchesSettingsContract.FeatureHost host, Context context,
+            GboardPatchesSettingsContract.TextValueConsumer consumer) {
+        Object target = host instanceof com.akshaykadam.pixelboard.extension.settings.GboardPatchesSettingsActivity
+                ? host : context;
+        if (target instanceof com.akshaykadam.pixelboard.extension.settings.GboardPatchesSettingsActivity) {
+            ((com.akshaykadam.pixelboard.extension.settings.GboardPatchesSettingsActivity) target)
+                    .showTextInputDialog("Gemini API key", "এখানে key paste করুন", "", consumer);
+        } else {
+            GboardPatchesSettingsContract.showTextInputDialog(host, "Gemini API key",
+                    "এখানে key paste করুন", "", consumer);
+        }
     }
 
     /** For tests and the registry: the feature never hides itself. */
