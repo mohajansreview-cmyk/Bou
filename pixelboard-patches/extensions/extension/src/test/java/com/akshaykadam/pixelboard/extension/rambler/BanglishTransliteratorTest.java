@@ -5,55 +5,75 @@ import org.junit.Test;
 
 public final class BanglishTransliteratorTest {
 
-    private static void assertConverts(String banglish, String bengali) {
-        Assert.assertEquals(banglish, bengali, BanglishTransliterator.convert(banglish));
+    private static void assertConverts(String banglish, String expected) {
+        Assert.assertEquals(banglish, expected, BanglishTransliterator.convert(banglish));
     }
 
     @Test
-    public void convertsEverydaySentences() {
+    public void convertsBengaliAndKeepsEnglishWords() {
+        assertConverts("ami office e meeting e jabo", "আমি office এ meeting এ যাবো");
+        assertConverts("amar laptop ta kaj korche na", "আমার laptop টা কাজ করছে না");
+        assertConverts("tomar mobile number ta dao", "তোমার mobile number টা দাও");
+        assertConverts("ekhon ami busy pore call dibo", "এখন আমি busy পরে call দিব");
+        assertConverts("taka pathiye dao bkash e", "টাকা পাঠিয়ে দাও bkash এ");
+        assertConverts("ok ami aschi", "ok আমি আসছি");
+    }
+
+    @Test
+    public void convertsEverydayBengali() {
         assertConverts("Ami bhalo achi.", "আমি ভালো আছি।");
         assertConverts("Kemon acho tumi?", "কেমন আছো তুমি?");
-        assertConverts("Ajke office e jabo na", "আজকে অফিস এ যাবো না");
-        assertConverts("Amar nam Subrata", "আমার নাম সুব্রাতা");
-        assertConverts("tomar kotha bujhte parchi", "তোমার কথা বুঝতে পারছি");
+        assertConverts("ajke amar mon bhalo nei", "আজকে আমার মন ভালো নেই");
+        assertConverts("ami kal dhaka jabo", "আমি কাল ঢাকা যাবো");
+        assertConverts("amar mathar betha korche", "আমার মাথার ব্যথা করছে");
+        assertConverts("apni kothay achen", "আপনি কোথায় আছেন");
+        assertConverts("shotti bolchi", "সত্যি বলছি");
+        assertConverts("ami tomake bhalobashi", "আমি তোমাকে ভালোবাসি");
     }
 
     @Test
-    public void appliesPhoneticRules() {
-        assertConverts("bangla", "বাংলা");
-        assertConverts("bangladesh", "বাংলাদেশ");
-        assertConverts("kintu", "কিন্তু");
-        assertConverts("bondhu", "বন্ধু");
-        assertConverts("amra", "আমরা");
-        assertConverts("prem", "প্রেম");
-        assertConverts("hoy", "হয়");
-        assertConverts("diye", "দিয়ে");
-        assertConverts("korbo", "করবো");
-        assertConverts("korte", "করতে");
-        assertConverts("onek", "অনেক");
-        assertConverts("amma", "আম্মা");
-        assertConverts("khawa", "খাওয়া");
-        assertConverts("bhai", "ভাই");
+    public void ambiguousWordsFollowTheSentence() {
+        assertConverts("to tumi ki bolte chao", "তো তুমি কি বলতে চাও");
+        assertConverts("or kache jao", "ওর কাছে যাও");
+        assertConverts("she is my friend", "she is my friend");
+        assertConverts("please send me the file", "please send me the file");
     }
 
     @Test
-    public void continuousVerbEndingsUseChho() {
-        assertConverts("korchi", "করছি");
-        assertConverts("bolche", "বলছে");
-        assertConverts("dekhchen", "দেখছেন");
-        assertConverts("khacchi", "খাচ্ছি");
-        assertConverts("cha", "চা");
+    public void unknownWordsUsePhoneticRules() {
+        Assert.assertEquals("বাংলা", BanglishTransliterator.convertWord("bangla"));
+        Assert.assertEquals("কিন্তু", BanglishTransliterator.convertWord("kintu"));
+        Assert.assertEquals("বন্ধু", BanglishTransliterator.convertWord("bondhu"));
+        Assert.assertEquals("আমরা", BanglishTransliterator.convertWord("amra"));
+        Assert.assertEquals("প্রেম", BanglishTransliterator.convertWord("prem"));
+        Assert.assertEquals("দিয়ে", BanglishTransliterator.convertWord("diye"));
+        Assert.assertEquals("করবো", BanglishTransliterator.convertWord("korbo"));
+        Assert.assertEquals("অনেক", BanglishTransliterator.convertWord("onek"));
+        Assert.assertEquals("খাওয়া", BanglishTransliterator.convertWord("khawa"));
+        Assert.assertEquals("করছি", BanglishTransliterator.convertWord("korchi"));
+        Assert.assertEquals("খাচ্ছি", BanglishTransliterator.convertWord("khacchi"));
     }
 
     @Test
     public void leavesNonBanglishAlone() {
         assertConverts("আমি ভালো", "আমি ভালো");
         assertConverts("123", "123");
-        assertConverts("mail me at a@b.com", "মাইল মে আত a@b.com");
-        assertConverts("visit google.com now", "ভিসিত google.com নও");
+        assertConverts("mail me at a@b.com", "mail me at a@b.com");
+        assertConverts("ami google.com e jabo", "আমি google.com এ যাবো");
         assertConverts("5G", "5G");
+        assertConverts("ami e-mail pathabo", "আমি e-mail পাঠাবো");
+        assertConverts("ami Dr. Rahman er kache jabo", "আমি Dr. Rahman এর কাছে যাবো");
         assertConverts("", "");
         Assert.assertNull(BanglishTransliterator.convert(null));
+    }
+
+    @Test
+    public void keysMatchBetweenBanglishAndBengali() {
+        Assert.assertEquals("kemn", BanglishTransliterator.latinKey("kemon"));
+        Assert.assertEquals("betha", BanglishTransliterator.latinKey("byatha"));
+        Assert.assertEquals("cele", BanglishTransliterator.latinKey("chhele"));
+        Assert.assertEquals("jdi", BanglishTransliterator.latinKey("yodi"));
+        Assert.assertEquals("khma", BanglishTransliterator.latinKey("kshoma"));
     }
 
     @Test

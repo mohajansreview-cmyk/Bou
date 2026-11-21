@@ -1,8 +1,10 @@
 package com.akshaykadam.pixelboard.extension.rambler;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -10,11 +12,12 @@ import java.util.Set;
 /**
  * Offline Banglish (romanized Bengali) to Bengali script converter.
  *
- * <p>Rambler dictation returns Bengali speech as Roman text ("ami bhalo achi"). This class turns
- * it into Bengali script ("আমি ভালো আছি") with no network access: a dictionary of common words
- * first, then Avro-style phonetic rules tuned for casual Banglish (consonants only join into a
- * conjunct for known clusters, a word-final "o" becomes ো, "ch" before a verb ending becomes ছ).
- * Bengali text, numbers, links and e-mail addresses pass through unchanged.</p>
+ * <p>Rambler dictation returns Bengali speech as Roman text ("ami office e jabo"). This class
+ * turns the Bengali words into Bengali script and keeps English words in English
+ * ("আমি office এ যাবো"), with no network access. Each Latin word is matched against a Bengali
+ * and an English word-frequency list ({@link BanglishWordData}); words that could be either
+ * follow the rest of the sentence. Unknown words (mostly names) fall back to Avro-style phonetic
+ * rules. Bengali text, numbers, links and e-mail addresses pass through unchanged.</p>
  *
  * <p>Pure Java with no Android dependency so it can be unit-tested on the JVM.</p>
  */
@@ -32,6 +35,14 @@ public final class BanglishTransliterator {
     private static final Set<String> R_PHALA_BASES = new HashSet<String>();
     /** Whole-word overrides for common words the rules spell wrong. */
     static final Map<String, String> DICTIONARY;
+    /** Words that are common in both languages; the rest of the sentence decides. */
+    private static final Set<String> AMBIGUOUS = new HashSet<String>();
+    /** Brand and app names that stay in English even inside a Bengali sentence. */
+    private static final Set<String> KEEP_ENGLISH = new HashSet<String>();
+    /** Short particles the frequency lists get wrong ("laptop ta" is ল্যাপটপটা, not তা). */
+    private static final Map<String, String> FORCE_BENGALI = new HashMap<String, String>();
+    /** A Bengali word must be this many times more frequent to beat an English reading. */
+    private static final int BENGALI_RANK_FACTOR = 3;
 
     static {
         vowel("a", "আ", "া");
@@ -149,19 +160,29 @@ public final class BanglishTransliterator {
         put(d, "manush", "মানুষ"); put(d, "jinish", "জিনিস"); put(d, "eid", "ঈদ");
         put(d, "pach", "পাঁচ"); put(d, "panch", "পাঁচ"); put(d, "chad", "চাঁদ");
         put(d, "shon", "শোন"); put(d, "dokan", "দোকান"); put(d, "ki", "কি");
-        // English loanwords Rambler spells in English.
-        put(d, "office", "অফিস"); put(d, "phone", "ফোন"); put(d, "mobile", "মোবাইল");
-        put(d, "school", "স্কুল"); put(d, "college", "কলেজ"); put(d, "video", "ভিডিও");
-        put(d, "ok", "ওকে"); put(d, "okay", "ওকে"); put(d, "internet", "ইন্টারনেট");
-        put(d, "facebook", "ফেসবুক"); put(d, "youtube", "ইউটিউব"); put(d, "message", "মেসেজ");
-        put(d, "class", "ক্লাস"); put(d, "exam", "এক্সাম"); put(d, "time", "টাইম");
-        put(d, "please", "প্লিজ"); put(d, "sorry", "সরি"); put(d, "thanks", "থ্যাংকস");
-        put(d, "bus", "বাস"); put(d, "computer", "কম্পিউটার"); put(d, "app", "অ্যাপ");
-        put(d, "online", "অনলাইন"); put(d, "call", "কল"); put(d, "doctor", "ডাক্তার");
-        put(d, "hospital", "হাসপাতাল"); put(d, "market", "মার্কেট"); put(d, "shop", "শপ");
-        put(d, "photo", "ফটো"); put(d, "game", "গেম"); put(d, "price", "প্রাইস");
         DICTIONARY = Collections.unmodifiableMap(d);
+
+        for (String w : new String[] {
+                "to", "a", "die", "hate", "more", "bad", "man", "pore", "bole", "tar", "ar",
+                "mane", "jete", "kal", "ma", "re", "hoy", "boy", "pane", "tin", "sat", "kom",
+                "she", "se", "or", "oke", "jai", "ja", "je", "hae", "ha"}) {
+            AMBIGUOUS.add(w);
+        }
+        for (String w : new String[] {
+                "bkash", "nagad", "imo", "whatsapp", "messenger", "gmail", "youtube", "facebook",
+                "ok", "okay"}) {
+            KEEP_ENGLISH.add(w);
+        }
+        FORCE_BENGALI.put("ta", "টা");
+        FORCE_BENGALI.put("ti", "টি");
+        FORCE_BENGALI.put("tai", "তাই");
+        FORCE_BENGALI.put("e", "এ");
+        FORCE_BENGALI.put("o", "ও");
+        FORCE_BENGALI.put("dhaka", "ঢাকা");
     }
+
+    private static volatile Map<String, Object[]> bengaliByKey; // key -> {word, rank}
+    private static volatile Map<String, Integer> englishRank;
 
     private BanglishTransliterator() {
     }
@@ -205,73 +226,256 @@ public final class BanglishTransliterator {
         return false;
     }
 
-    /** Converts every Latin word in {@code text}; everything else is kept as is. */
+    /**
+     * Converts the Bengali words in {@code text} to Bengali script and keeps English words.
+     * Everything that is not a Latin word is kept as is.
+     */
     public static String convert(String text) {
         if (text == null || text.isEmpty()) {
             return text;
         }
-        StringBuilder out = new StringBuilder(text.length());
+        // Pass 1: split into whitespace-free chunks and decide every Latin word.
+        List<String> chunks = new ArrayList<String>();
+        List<List<Word>> chunkWords = new ArrayList<List<Word>>();
+        int bengaliVotes = 0;
+        int englishVotes = 0;
         int i = 0;
         int n = text.length();
         while (i < n) {
-            char c = text.charAt(i);
-            if (Character.isWhitespace(c)) {
-                out.append(c);
-                i++;
-                continue;
-            }
             int end = i;
-            while (end < n && !Character.isWhitespace(text.charAt(end))) {
+            boolean space = Character.isWhitespace(text.charAt(i));
+            while (end < n && Character.isWhitespace(text.charAt(end)) == space) {
                 end++;
             }
-            out.append(convertChunk(text.substring(i, end)));
+            String chunk = text.substring(i, end);
+            List<Word> words = space || isProtectedChunk(chunk) ? null : splitWords(chunk);
+            if (words != null) {
+                for (Word w : words) {
+                    if (w.decision == Decision.BENGALI) {
+                        bengaliVotes++;
+                    } else if (w.decision == Decision.ENGLISH) {
+                        englishVotes++;
+                    }
+                }
+            }
+            chunks.add(chunk);
+            chunkWords.add(words);
             i = end;
+        }
+        // Pass 2: ambiguous words follow the sentence; ties go to Bengali (Bengali keyboard).
+        boolean bengaliSentence = bengaliVotes >= englishVotes;
+        StringBuilder out = new StringBuilder(text.length() + 8);
+        for (int c = 0; c < chunks.size(); c++) {
+            List<Word> words = chunkWords.get(c);
+            if (words == null) {
+                out.append(chunks.get(c));
+                continue;
+            }
+            String chunk = chunks.get(c);
+            int pos = 0;
+            boolean lastWordBengali = false;
+            for (Word w : words) {
+                out.append(chunk, pos, w.start);
+                boolean bengali = w.decision == Decision.BENGALI
+                        || (w.decision == Decision.AMBIGUOUS && bengaliSentence);
+                out.append(bengali ? w.bengali : w.latin);
+                lastWordBengali = bengali && w.known; // "Dr." of an unknown word keeps its dot
+                pos = w.start + w.latin.length();
+            }
+            String tail = chunk.substring(pos);
+            out.append(lastWordBengali && tail.equals(".") ? "।" : tail);
         }
         return out.toString();
     }
 
-    /** A whitespace-free chunk: keep links, e-mails and mixed letter+digit codes untouched. */
-    private static String convertChunk(String chunk) {
-        if (chunk.indexOf('@') >= 0 || chunk.indexOf('/') >= 0 || chunk.indexOf(':') >= 0
-                || chunk.matches(".*[A-Za-z]\\.[A-Za-z].*")
-                || chunk.matches(".*([A-Za-z][0-9]|[0-9][A-Za-z]).*")) {
-            return chunk;
+    private enum Decision { BENGALI, ENGLISH, AMBIGUOUS }
+
+    private static final class Word {
+        final int start;
+        final String latin;
+        final Decision decision;
+        final String bengali;
+        /** False when neither word list knows the word and it was spelled phonetically. */
+        final boolean known;
+
+        Word(int start, String latin, Decision decision, String bengali) {
+            this(start, latin, decision, bengali, true);
         }
-        StringBuilder out = new StringBuilder(chunk.length() + 4);
-        boolean converted = false;
+
+        Word(int start, String latin, Decision decision, String bengali, boolean known) {
+            this.start = start;
+            this.latin = latin;
+            this.decision = decision;
+            this.bengali = bengali;
+            this.known = known;
+        }
+    }
+
+    /** Links, e-mails, hyphenated words (e-mail) and letter+digit codes are never converted. */
+    private static boolean isProtectedChunk(String chunk) {
+        return chunk.indexOf('@') >= 0 || chunk.indexOf('/') >= 0
+                || chunk.matches(".*[A-Za-z]\\.[A-Za-z].*")
+                || chunk.matches(".*[A-Za-z]-[A-Za-z].*")
+                || chunk.matches(".*([A-Za-z][0-9]|[0-9][A-Za-z]).*");
+    }
+
+    private static List<Word> splitWords(String chunk) {
+        List<Word> words = new ArrayList<Word>();
         int i = 0;
         int n = chunk.length();
         while (i < n) {
-            char c = chunk.charAt(i);
-            if (isLatin(c)) {
-                int end = i;
-                while (end < n && isLatin(chunk.charAt(end))) {
-                    end++;
-                }
-                out.append(convertWord(chunk.substring(i, end)));
-                converted = true;
-                i = end;
-            } else if (c == '.' && converted && i == n - 1) {
-                out.append('।');
+            if (!isLatin(chunk.charAt(i))) {
                 i++;
-            } else {
-                out.append(c);
-                i++;
+                continue;
+            }
+            int end = i;
+            while (end < n && isLatin(chunk.charAt(end))) {
+                end++;
+            }
+            words.add(decide(i, chunk.substring(i, end)));
+            i = end;
+        }
+        return words;
+    }
+
+    private static Word decide(int start, String latin) {
+        String w = latin.toLowerCase(Locale.ROOT);
+        if (KEEP_ENGLISH.contains(w)) {
+            return new Word(start, latin, Decision.ENGLISH, null);
+        }
+        String forced = FORCE_BENGALI.get(w);
+        if (forced != null) {
+            return new Word(start, latin, Decision.BENGALI, forced);
+        }
+        ensureLoaded();
+        Integer en = englishRank.get(w);
+        String known = DICTIONARY.get(w);
+        if (known != null) {
+            return new Word(start, latin, en == null ? Decision.BENGALI : Decision.AMBIGUOUS, known);
+        }
+        Object[] bn = lookupBengali(w, en == null);
+        if (bn != null && en != null && AMBIGUOUS.contains(w)) {
+            return new Word(start, latin, Decision.AMBIGUOUS, (String) bn[0]);
+        }
+        if (bn != null && (en == null || (Integer) bn[1] * BENGALI_RANK_FACTOR < en)) {
+            return new Word(start, latin, Decision.BENGALI, (String) bn[0]);
+        }
+        if (en != null) {
+            return new Word(start, latin, Decision.ENGLISH, null);
+        }
+        // Unknown to both lists (mostly names): spelled phonetically inside a Bengali sentence,
+        // kept as written inside an English one.
+        return new Word(start, latin, Decision.AMBIGUOUS, convertWord(w), false);
+    }
+
+    /**
+     * Exact key first; for words that are not English, also allow Banglish "a" for a silent
+     * inherent vowel (subrata).
+     */
+    private static Object[] lookupBengali(String w, boolean allowLooseVowels) {
+        String key = latinKey(w);
+        Object[] best = bengaliByKey.get(key);
+        if (best != null || !allowLooseVowels) {
+            return best;
+        }
+        List<Integer> as = new ArrayList<Integer>();
+        for (int i = 1; i < key.length() && as.size() < 3; i++) {
+            if (key.charAt(i) == 'a') {
+                as.add(i);
             }
         }
-        return out.toString();
+        for (int mask = 1; mask < (1 << as.size()); mask++) {
+            StringBuilder k = new StringBuilder(key.length());
+            for (int i = 0; i < key.length(); i++) {
+                int bit = as.indexOf(i);
+                if (bit < 0 || (mask & (1 << bit)) == 0) {
+                    k.append(key.charAt(i));
+                }
+            }
+            Object[] cand = bengaliByKey.get(k.toString());
+            if (cand != null && (best == null || (Integer) cand[1] < (Integer) best[1])) {
+                best = cand;
+            }
+        }
+        return best;
+    }
+
+    /**
+     * Lossy phonetic key of a Banglish word. Must stay in sync with bn_key/norm in
+     * tools/build_banglish_data.py, which builds the Bengali side of the same keys.
+     */
+    static String latinKey(String word) {
+        String w = word.toLowerCase(Locale.ROOT)
+                .replaceFirst("^([bcdfghjklmnpqrstvz]h?)y[ae]", "$1e")
+                .replaceFirst("^y", "j") // yodi -> যদি (য keys as j)
+                .replace("ksh", "kh") // ক্ষ keys as খ
+                .replace("chh", "c").replace("ch", "c").replace("sh", "s").replace("f", "ph")
+                .replace("v", "bh").replace("z", "j").replace("q", "k").replace("x", "ks")
+                .replace("ee", "i").replace("oo", "u").replace("aa", "a");
+        StringBuilder out = new StringBuilder(w.length());
+        for (int i = 0; i < w.length(); i++) {
+            char c = w.charAt(i);
+            if (out.length() > 0 && out.charAt(out.length() - 1) == c) {
+                continue; // doubled letters collapse
+            }
+            out.append(c);
+        }
+        return out.toString().replace("o", "").replace("w", "");
+    }
+
+    private static volatile boolean preloadStarted;
+
+    /** Loads the word lists on a background thread so the first dictation does not wait. */
+    public static void preloadAsync() {
+        if (preloadStarted || englishRank != null) {
+            return;
+        }
+        preloadStarted = true;
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ensureLoaded();
+            }
+        }, "PixelBoardBanglishPreload");
+        t.setDaemon(true);
+        t.setPriority(Thread.MIN_PRIORITY);
+        t.start();
+    }
+
+    private static void ensureLoaded() {
+        if (englishRank != null) {
+            return;
+        }
+        synchronized (BanglishTransliterator.class) {
+            if (englishRank != null) {
+                return;
+            }
+            Map<String, Object[]> bn = new HashMap<String, Object[]>(65536);
+            for (String chunk : BanglishWordData.bengali()) {
+                for (String line : chunk.split("\n")) {
+                    String[] p = line.split("\t");
+                    bn.put(p[0], new Object[] {p[1], Integer.valueOf(p[2])});
+                }
+            }
+            Map<String, Integer> en = new HashMap<String, Integer>(65536);
+            for (String chunk : BanglishWordData.english()) {
+                for (String line : chunk.split("\n")) {
+                    int tab = line.indexOf('\t');
+                    en.put(line.substring(0, tab), Integer.valueOf(line.substring(tab + 1)));
+                }
+            }
+            bengaliByKey = bn;
+            englishRank = en;
+        }
     }
 
     private static boolean isLatin(char c) {
         return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
     }
 
+    /** Phonetic (Avro-style) spelling, used for words neither list knows. */
     static String convertWord(String word) {
         String w = word.toLowerCase(Locale.ROOT);
-        String known = DICTIONARY.get(w);
-        if (known != null) {
-            return known;
-        }
         StringBuilder out = new StringBuilder(w.length() + 4);
         String prevConsonant = null; // Latin key of the previous consonant, null if none
         boolean atStart = true;
