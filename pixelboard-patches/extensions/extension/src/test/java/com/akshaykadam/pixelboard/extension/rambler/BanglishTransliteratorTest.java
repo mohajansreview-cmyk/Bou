@@ -74,6 +74,10 @@ public final class BanglishTransliteratorTest {
                 "আমি এখন drive করছি, পরে কথা বলি।");
         assertConverts("Ami ghumate jacchi, good night.", "আমি ঘুমাতে যাচ্ছি, good night.");
         assertConverts("bKash e taka pathiye dilam.", "bKash এ টাকা পাঠিয়ে দিলাম।");
+        // From the phone: Dhaka past tense and continuous forms.
+        assertConverts("Ekta update disi, sei jonno oi update ta check kortesilam.",
+                "একটা update দিছি, সেই জন্য ওই update টা check করতেছিলাম।");
+        assertConverts("Meeting nei to?", "Meeting নেই তো?");
     }
 
     @Test

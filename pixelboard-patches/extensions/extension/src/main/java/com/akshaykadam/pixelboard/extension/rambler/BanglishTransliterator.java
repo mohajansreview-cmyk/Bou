@@ -173,7 +173,10 @@ public final class BanglishTransliterator {
         put(d, "shondha", "সন্ধ্যা"); put(d, "shomoy", "সময়");
         put(d, "manush", "মানুষ"); put(d, "jinish", "জিনিস"); put(d, "eid", "ঈদ");
         put(d, "pach", "পাঁচ"); put(d, "panch", "পাঁচ"); put(d, "chad", "চাঁদ");
-        put(d, "shon", "শোন"); put(d, "deo", "দেও"); put(d, "dokan", "দোকান"); put(d, "ki", "কি");
+        put(d, "shon", "শোন");
+        // Dhaka past tense written with "s": disi = দিছি (gave), not দিচ্ছি (giving).
+        put(d, "disi", "দিছি"); put(d, "dise", "দিছে"); put(d, "diso", "দিছো");
+        put(d, "nisi", "নিছি"); put(d, "nise", "নিছে"); put(d, "niso", "নিছো"); put(d, "deo", "দেও"); put(d, "dokan", "দোকান"); put(d, "ki", "কি");
         // Regional speech (Chittagong, Sylhet, Noakhali, Barishal, Dhaka, North Bengal).
         put(d, "aai", "আঁই"); put(d, "tuy", "তুঁই"); put(d, "kenge", "কেঙ্গে");
         put(d, "kenne", "কেন্নে"); put(d, "kene", "কেনে"); put(d, "kodde", "কোদ্দে");
@@ -325,7 +328,12 @@ public final class BanglishTransliterator {
             }
             Decision left = nearestDecided(all, k, -1);
             Decision right = nearestDecided(all, k, 1);
-            if (w.strictContext) {
+            if (w.leanBengali) {
+                boolean englishBothSides = left == Decision.ENGLISH && right == Decision.ENGLISH;
+                boolean englishOnlySentence = left != Decision.BENGALI && right != Decision.BENGALI
+                        && !bengaliSentence;
+                w.useBengali = !englishBothSides && !englishOnlySentence;
+            } else if (w.strictContext) {
                 w.useBengali = left != Decision.ENGLISH && right != Decision.ENGLISH
                         && (left == Decision.BENGALI || right == Decision.BENGALI);
             } else if (left == Decision.BENGALI || right == Decision.BENGALI) {
@@ -388,6 +396,8 @@ public final class BanglishTransliterator {
         boolean useBengali;
         /** Bengali only when no neighbour is English (common English words like "you", "done"). */
         boolean strictContext;
+        /** Bengali unless both neighbours are English (unknown words, mostly Bengali speech). */
+        boolean leanBengali;
 
         Word(int start, String latin, Decision decision, String bengali) {
             this(start, latin, decision, bengali, true);
@@ -476,7 +486,9 @@ public final class BanglishTransliterator {
         }
         // Unknown to both lists (mostly names): spelled phonetically inside a Bengali sentence,
         // kept as written inside an English one.
-        return new Word(start, latin, Decision.AMBIGUOUS, convertWord(w), false);
+        Word unknown = new Word(start, latin, Decision.AMBIGUOUS, convertWord(w), false);
+        unknown.leanBengali = true; // "check kortesilam": unknown words are usually Bengali
+        return unknown;
     }
 
     /**
@@ -594,8 +606,10 @@ public final class BanglishTransliterator {
     }
 
     private static final java.util.regex.Pattern DHAKA_ENDING =
-            // After a consonant (bolsi) or "ai" (khaiso); not after other vowels: "asi" is আসি.
-            java.util.regex.Pattern.compile("(.*(?:[^aeiou]|ai))s(i|o|e|en|is|ilam|ilo|ile)");
+            // After a consonant (bolsi), "ai" (khaiso) or consonant+i (disi -> দিছি); not after
+            // other vowels: "asi" is আসি.
+            java.util.regex.Pattern.compile(
+                    "(.*(?:[^aeiou]|ai|[^aeiou]i))s(i|o|e|en|is|ilam|ilo|ile|ila)");
 
     /**
      * Lossy phonetic key of a Banglish word. Must stay in sync with bn_key/norm in
@@ -690,7 +704,8 @@ public final class BanglishTransliterator {
 
     /** Phonetic (Avro-style) spelling, used for words neither list knows. */
     static String convertWord(String word) {
-        String w = word.toLowerCase(Locale.ROOT);
+        // Dhaka continuous tense writes ছ as "s": kortesilam -> করতেছিলাম.
+        String w = word.toLowerCase(Locale.ROOT).replaceAll("tes(?=i|o|e)", "techh");
         StringBuilder out = new StringBuilder(w.length() + 4);
         String prevConsonant = null; // Latin key of the previous consonant, null if none
         boolean atStart = true;
