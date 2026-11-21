@@ -1,0 +1,40 @@
+name: সমস্যা জানান (Bug report)
+description: Bou ঠিকমতো কাজ না করলে জানান।
+title: "সমস্যা: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: কী হয়েছে
+      description: কী করছিলেন, কী হওয়ার কথা ছিল আর কী হলো।
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: আবার ঘটানোর ধাপ
+      placeholder: |
+        ১. WhatsApp খুললাম
+        ২. ✦ মাইকে চাপলাম
+        ৩. ...
+  - type: input
+    id: version
+    attributes:
+      label: Bou version
+      description: Bou Settings-এর নিচে লেখা থাকে।
+      placeholder: "1.4.2"
+    validations:
+      required: true
+  - type: input
+    id: phone
+    attributes:
+      label: ফোন আর Android version
+      placeholder: HONOR 200, Android 16
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshot (থাকলে)
+      description: ছবি এখানে টেনে আনুন। কোনো ব্যক্তিগত তথ্য বা key যেন না থাকে।

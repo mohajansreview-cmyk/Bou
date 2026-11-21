@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: প্রশ্ন বা আলোচনা (Discussions)
+    url: https://github.com/mohajansreview-cmyk/Bou/discussions
+    about: কিছু জানতে চাইলে বা আলোচনা করতে চাইলে এখানে।
+  - name: Subrata Mohajan-এর সাথে যোগাযোগ
+    url: https://subrata.fedardokan.com
+    about: সরাসরি নির্মাতার সাথে কথা বলতে।
+  - name: ব্যবহারের নিয়ম (বাংলায়)
+    url: https://bou-keyboard.vercel.app/install
+    about: ইনস্টল আর AI মোডের ধাপ।
