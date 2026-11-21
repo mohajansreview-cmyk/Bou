@@ -71,6 +71,8 @@ public final class GboardRambler1803StockPolicy {
         // Start tracking on the first flag read the policy sees, long before a rotation: Gboard
         // reads the deactivation delay only inside onDeactivate, which may be the rotation itself.
         GboardRamblerRotationGrace.ensureListening();
+        // Rambler flags are read when the keyboard starts: warm up the Banglish word lists now.
+        BanglishTransliterator.preloadAsync();
         if (SHOW_RAMBLER_DICT_SETTINGS_FLAG.equals(flagName)) {
             return originalResult instanceof Boolean ? Boolean.TRUE : originalResult;
         }

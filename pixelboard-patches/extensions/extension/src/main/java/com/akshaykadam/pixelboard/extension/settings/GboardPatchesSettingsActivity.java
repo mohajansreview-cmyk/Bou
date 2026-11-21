@@ -123,7 +123,7 @@ public final class GboardPatchesSettingsActivity extends Activity
     private static final String GBOARD_PACKAGE_STABLE =
             "com.google.android.inputmethod.latin";
     private static final String GBOARD_PACKAGE_REVERSED_DEV =
-            "com.akshaykadam.pixelboard";
+            "com.subratamohajan.bou";
     private static final String LIVE_TRANSCRIBE_PACKAGE_NAME =
             "com.google.audio.hearing.visualization.accessibility.scribe";
     private static final String SPEECH_SERVICES_PACKAGE_NAME =

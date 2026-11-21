@@ -208,6 +208,12 @@ public final class GboardRamblerDictationRuntime {
                         textSpanField.set(span, transcript);
                     }
                 }
+
+                try {
+                    convertBanglish(action, span, intentField, textSpanField);
+                } catch (Throwable t) {
+                    Log.w(TAG, "Failed to convert Banglish dictation", t);
+                }
             }
         } catch (Throwable t) {
             Log.w(TAG, "Failed to filter voice text transcript", t);
@@ -387,6 +393,37 @@ public final class GboardRamblerDictationRuntime {
             }
         }
         return sb.toString();
+    }
+
+    /**
+     * Rambler returns Bengali speech as Roman text (Banglish). Rewrite the Bengali words of plain
+     * dictation spans into Bengali script offline; English words stay English, so this runs on
+     * every keyboard language. Spans that carry a speech diff (mid-text edits) are left alone so
+     * the diff still matches the field.
+     */
+    private static void convertBanglish(Object action, Object span, Field intentField,
+            Field textSpanField) throws IllegalAccessException {
+        int intent = intentField.getInt(action);
+        Field diffField = findField(action.getClass(), "e");
+        boolean hasDiff = diffField != null && diffField.get(action) != null;
+        Object textObj = textSpanField.get(span);
+        String text = textObj instanceof String ? (String) textObj : null;
+        // Gboard 18.6.3 Rambler tags plain dictation as intent 2 (seen on device), not only 0/5.
+        boolean eligible = (intent == 0 || intent == 2 || intent == 5) && !hasDiff
+                && BanglishTransliterator.needsConversion(text);
+        String converted = eligible ? BanglishTransliterator.convert(text) : text;
+        if (eligible) {
+            // AI mode (opt-in, user's own key) understands the whole sentence; any failure keeps
+            // the offline result.
+            String ai = BouAiRewriter.rewrite(
+                    GboardRambler1803OfficialSelectionRuntime.applicationContext(), text, converted);
+            if (ai != null) {
+                converted = ai;
+            }
+        }
+        if (eligible && !converted.equals(text)) {
+            textSpanField.set(span, converted);
+        }
     }
 
     private static Field findField(Class<?> clazz, String fieldName) {

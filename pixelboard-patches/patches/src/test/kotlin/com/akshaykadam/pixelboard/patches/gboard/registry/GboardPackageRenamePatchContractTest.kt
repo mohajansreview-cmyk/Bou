@@ -35,7 +35,7 @@ class GboardPackageRenamePatchContractTest {
         assertEquals(1, patch.dependencies.size)
         assertSame(gboardPackageRenameResourcePatch, patch.dependencies.single())
         assertEquals("com.google.android.inputmethod.latin", GBOARD_PACKAGE_NAME)
-        assertEquals("com.akshaykadam.pixelboard", GBOARD_PATCHED_PACKAGE_NAME)
+        assertEquals("com.subratamohajan.bou", GBOARD_PATCHED_PACKAGE_NAME)
 
         val compatibilities = checkNotNull(patch.compatibility)
         assertEquals(1, compatibilities.size)

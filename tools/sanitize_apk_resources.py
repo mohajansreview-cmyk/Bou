@@ -60,6 +60,7 @@ PIXELBOARD_MARKERS = [
     b'gboardpatches',
     b'gboard_patches',
     b'akshaykadam',
+    b'subratamohajan',
     b'GboardPatchesSettingsActivity',
     b'PixelBoardUpdateActivity',
 ]
@@ -169,9 +170,10 @@ def sanitize_apk(target_apk, input_apk, keystore_path):
     sign_cmd = [
         apksigner, 'sign',
         '--ks', keystore_path,
-        '--ks-pass', 'pass:pixelboard',
-        '--key-pass', 'pass:pixelboard',
-        '--ks-key-alias', 'pixelboard',
+        # Release builds pass the key through the environment; the defaults are the dev key.
+        '--ks-pass', 'env:KEYSTORE_PASSWORD' if os.environ.get('KEYSTORE_PASSWORD') else 'pass:pixelboard',
+        '--key-pass', 'env:KEYSTORE_PASSWORD' if os.environ.get('KEYSTORE_PASSWORD') else 'pass:pixelboard',
+        '--ks-key-alias', os.environ.get('KEYSTORE_ALIAS', 'pixelboard'),
         aligned_apk
     ]
     res = subprocess.run(sign_cmd, capture_output=True, text=True)

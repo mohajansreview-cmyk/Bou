@@ -7,6 +7,8 @@
  */
 package com.akshaykadam.pixelboard.extension.settings;
 
+import com.akshaykadam.pixelboard.extension.rambler.BouAiSettingsFeature;
+import com.akshaykadam.pixelboard.extension.updater.PixelBoardUpdateFeature;
 import android.content.Context;
 import android.util.Log;
 
@@ -15,7 +17,6 @@ import java.util.Collections;
 import java.util.List;
 
 import com.akshaykadam.pixelboard.extension.keyboard.GboardAiVoiceSettingsGroupFeature;
-import com.akshaykadam.pixelboard.extension.updater.PixelBoardUpdateFeature;
 
 public final class GboardPatchesSettingsFeatureRegistry {
     private static final String TAG = "PixelBoard";
@@ -27,6 +28,8 @@ public final class GboardPatchesSettingsFeatureRegistry {
         List<GboardPatchesSettingsContract.Feature> features =
                 new ArrayList<GboardPatchesSettingsContract.Feature>();
         addIfAvailable(context, features, new GboardAiVoiceSettingsGroupFeature(context));
+        addIfAvailable(context, features, new BouAiSettingsFeature(context));
+        // Updates come from Bou's own GitHub releases (same signing key), never upstream.
         addIfAvailable(context, features, new PixelBoardUpdateFeature(context));
         return Collections.unmodifiableList(features);
     }

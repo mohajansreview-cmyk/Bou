@@ -130,6 +130,7 @@ internal fun applyGboardPatchesSettings(
     ensureManifestUsesPermission(manifestDocument, manifest, "android.permission.CAMERA")
     ensureManifestUsesPermission(manifestDocument, manifest, "android.permission.READ_MEDIA_IMAGES")
     ensureManifestUsesPermission(manifestDocument, manifest, "android.permission.READ_EXTERNAL_STORAGE")
+    // The in-app updater installs Bou's own signed releases.
     ensureManifestUsesPermission(manifestDocument, manifest, "android.permission.REQUEST_INSTALL_PACKAGES")
 
     val activity = application.childElements("activity").firstOrNull {
