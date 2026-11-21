@@ -1,7 +1,7 @@
 {
-  "version": "1.4.4",
-  "created_at": "2026-11-22T05:00:00",
-  "description": "### Bou 1.4.4\n\n* Fixed: tapping Gemini API key now opens the key box\n\nSupports Gboard 18.6.3.100 (arm64).",
-  "download_url": "https://github.com/mohajansreview-cmyk/Bou/releases/download/v1.4.4/patches-1.4.4.mpp",
+  "version": "1.4.5",
+  "created_at": "2026-11-22T06:00:00",
+  "description": "### Bou 1.4.5\n\n* Fixed: the Gemini API key box opens and saves (tested on a phone)\n\nSupports Gboard 18.6.3.100 (arm64).",
+  "download_url": "https://github.com/mohajansreview-cmyk/Bou/releases/download/v1.4.5/patches-1.4.5.mpp",
   "signature_download_url": ""
 }
