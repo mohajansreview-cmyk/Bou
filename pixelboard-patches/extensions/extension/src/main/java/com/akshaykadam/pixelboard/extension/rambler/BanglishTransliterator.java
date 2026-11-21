@@ -161,13 +161,43 @@ public final class BanglishTransliterator {
         put(d, "manush", "মানুষ"); put(d, "jinish", "জিনিস"); put(d, "eid", "ঈদ");
         put(d, "pach", "পাঁচ"); put(d, "panch", "পাঁচ"); put(d, "chad", "চাঁদ");
         put(d, "shon", "শোন"); put(d, "deo", "দেও"); put(d, "dokan", "দোকান"); put(d, "ki", "কি");
+        // Regional speech (Chittagong, Sylhet, Noakhali, Barishal, Dhaka, North Bengal).
+        put(d, "aai", "আঁই"); put(d, "tuy", "তুঁই"); put(d, "kenge", "কেঙ্গে");
+        put(d, "kenne", "কেন্নে"); put(d, "kene", "কেনে"); put(d, "kodde", "কোদ্দে");
+        put(d, "hitara", "হিতারা"); put(d, "hite", "হিতে"); put(d, "hiba", "হিবা");
+        put(d, "gom", "গম"); put(d, "hoir", "হইর"); put(d, "hoiyum", "হইয়ুম");
+        put(d, "hoijjum", "হইজ্জুম"); put(d, "gorir", "গরির"); put(d, "jaibi", "যাইবি");
+        put(d, "jaiyum", "যাইয়ুম"); put(d, "jaim", "যাইম"); put(d, "asos", "আছস");
+        put(d, "asoni", "আছোনি"); put(d, "kiyolla", "কিয়োল্লা"); put(d, "kiyalla", "কিয়াল্লা");
+        put(d, "kitte", "কিত্তে"); put(d, "beggun", "বেগ্গুন"); put(d, "beggune", "বেগ্গুনে");
+        put(d, "ekkan", "এক্কান"); put(d, "ugga", "উগ্গা"); put(d, "fua", "ফুয়া");
+        put(d, "kita", "কিতা"); put(d, "kunta", "কুনটা"); put(d, "kunu", "কুনু");
+        put(d, "kun", "কুন"); put(d, "kitar", "কিতার"); put(d, "jairam", "যাইরাম");
+        put(d, "jaitam", "যাইতাম"); put(d, "koiram", "কইরাম"); put(d, "khairam", "খাইরাম");
+        put(d, "oibo", "অইবো"); put(d, "bala", "বালা"); put(d, "bhala", "ভালা");
+        put(d, "afne", "আফনে"); put(d, "afnar", "আফনার"); put(d, "afnare", "আফনারে");
+        put(d, "furi", "ফুড়ি"); put(d, "hetere", "হেতেরে"); put(d, "hete", "হেতে");
+        put(d, "hetara", "হেতারা"); put(d, "kitta", "কিত্তা"); put(d, "koros", "করোস");
+        put(d, "koilam", "কইলাম"); put(d, "koilo", "কইলো"); put(d, "mui", "মুই");
+        put(d, "mor", "মোর"); put(d, "tomgo", "তোমগো"); put(d, "amgo", "আমগো");
+        put(d, "jaimu", "যাইমু"); put(d, "khaimu", "খাইমু"); put(d, "kormu", "করমু");
+        put(d, "dimu", "দিমু"); put(d, "nimu", "নিমু"); put(d, "jamu", "যামু");
+        put(d, "khamu", "খামু"); put(d, "asmu", "আসমু"); put(d, "kortesi", "করতেছি");
+        put(d, "kortaso", "করতাছো"); put(d, "kortesos", "করতেছস"); put(d, "kortesen", "করতেছেন");
+        put(d, "jaitesi", "যাইতেছি"); put(d, "khaitesi", "খাইতেছি"); put(d, "achos", "আছস");
+        put(d, "korsos", "করছস"); put(d, "geso", "গেছো"); put(d, "gesi", "গেছি");
+        put(d, "gese", "গেছে"); put(d, "aisi", "আইছি"); put(d, "aiso", "আইছো");
+        put(d, "aise", "আইছে"); put(d, "kemne", "কেমনে"); put(d, "hoise", "হইছে");
+        put(d, "hoiche", "হইছে"); put(d, "hoiso", "হইছো"); put(d, "koiso", "কইছো");
+        put(d, "koisi", "কইছি"); put(d, "koise", "কইছে"); put(d, "hamra", "হামরা");
+        put(d, "hamar", "হামার"); put(d, "tore", "তোরে");
         DICTIONARY = Collections.unmodifiableMap(d);
 
         for (String w : new String[] {
                 // Only words that are common in English too; rarer English look-alikes
                 // (pore, hoy, bole, mane...) are settled by frequency and come out Bengali.
                 "to", "a", "die", "hate", "more", "bad", "man", "tar", "ar", "kal", "ma", "re",
-                "boy", "tin", "sat", "she", "se", "or", "oke", "jai", "ja", "je", "hae", "ha"}) {
+                "boy", "tin", "sat", "tore", "she", "se", "or", "oke", "jai", "ja", "je", "hae", "ha"}) {
             AMBIGUOUS.add(w);
         }
         for (String w : new String[] {
@@ -458,18 +488,52 @@ public final class BanglishTransliterator {
         if (candidates == null || candidates.length == 0) {
             return null;
         }
-        Object[] best = candidates[0];
+        Object[] best = null;
+        for (Object[] c : candidates) {
+            if (endingMatches(w, (String) c[0])) {
+                best = c;
+                break;
+            }
+        }
+        if (best == null) {
+            return null; // e.g. hitara must not become হিটার, hoir must not become হিরো
+        }
         int n = w.length();
         boolean endsWithO = n >= 2 && w.charAt(n - 1) == 'o' && !isVowel(w.charAt(n - 2));
         if (endsWithO && !((String) best[0]).endsWith("ো")) {
             int limit = (Integer) best[1] * O_ENDING_RANK_FACTOR + O_ENDING_RANK_FACTOR;
             for (Object[] c : candidates) {
-                if (((String) c[0]).endsWith("ো") && (Integer) c[1] <= limit) {
+                if (((String) c[0]).endsWith("ো") && (Integer) c[1] <= limit
+                        && endingMatches(w, (String) c[0])) {
                     return new Object[] {c[0], best[1]};
                 }
             }
         }
         return best;
+    }
+
+    /**
+     * Banglish keeps a word's last sound: a final a/e/i/u needs the same vowel at the end of the
+     * Bengali word, and a final consonant needs a Bengali word without a final vowel sign.
+     * A final "o" matches either (kemon / bolo).
+     */
+    static boolean endingMatches(String latin, String bengali) {
+        char l = latin.charAt(latin.length() - 1);
+        char b = bengali.charAt(bengali.length() - 1);
+        switch (l) {
+            case 'a':
+                return b == 'া' || b == 'আ';
+            case 'e':
+                return b == 'ে' || b == 'এ';
+            case 'i':
+                return b == 'ি' || b == 'ী' || b == 'ই' || b == 'ঈ';
+            case 'u':
+                return b == 'ু' || b == 'ূ' || b == 'উ' || b == 'ঊ';
+            case 'o':
+                return true;
+            default:
+                return "ািীুূৃেৈোৌআইঈউঊএঐওঔ".indexOf(b) < 0;
+        }
     }
 
     private static boolean isVowel(char c) {
@@ -605,6 +669,8 @@ public final class BanglishTransliterator {
                     }
                 } else if ("o".equals(vowelKey) && atStart) {
                     out.append("অ");
+                } else if ("a".equals(vowelKey) && !atStart) {
+                    out.append("য়া"); // vowel + a glides: fua -> ফুয়া
                 } else {
                     out.append(forms[0]);
                 }
@@ -628,6 +694,11 @@ public final class BanglishTransliterator {
             prevConsonant = "w".equals(consonantKey) && !vowelFollows ? null : consonantKey;
             atStart = false;
             i = next;
+        }
+        // "Go" verbs start with য, not জ: jaibi -> যাইবি, jete -> যেতে.
+        if (out.length() > 0 && out.charAt(0) == 'জ'
+                && w.matches("^(ja(i|b|m|o|y|cch|t)|je(t|n)).*")) {
+            out.setCharAt(0, 'য');
         }
         return out.toString();
     }

@@ -34,6 +34,30 @@ public final class BanglishTransliteratorTest {
     }
 
     @Test
+    public void regionalSpeech() {
+        // Chittagong
+        assertConverts("Tui kenge asos?", "তুই কেঙ্গে আছস?");
+        assertConverts("Tui kodde jaibi?", "তুই কোদ্দে যাইবি?");
+        assertConverts("Hitara kenge ase?", "হিতারা কেঙ্গে আসে?");
+        // Sylhet
+        assertConverts("Tumi kita koro?", "তুমি কিতা করো?");
+        assertConverts("Ami bari jairam.", "আমি বাড়ি যাইরাম।");
+        assertConverts("Tumi kunta khaiso?", "তুমি কুনটা খাইছো?");
+        // Noakhali
+        assertConverts("Ami hetere koilam.", "আমি হেতেরে কইলাম।");
+        assertConverts("Tui kitta koros?", "তুই কিত্তা করোস?");
+        // Barishal, Dhaka, North Bengal
+        assertConverts("Mui ekhon jaimu na.", "মুই এখন যাইমু না।");
+        assertConverts("Tomgo bari kothay?", "তোমগো বাড়ি কোথায়?");
+        assertConverts("Ki kortesos?", "কি করতেছস?");
+        assertConverts("Hamra kal jamu.", "হামরা কাল যামু।");
+        // Unknown words are spelled out, never matched to an unrelated word.
+        assertConverts("Ar fua ekhon ghumar.", "আর ফুয়া এখন ঘুমার।");
+        Assert.assertTrue(BanglishTransliterator.endingMatches("kemon", "কেমন"));
+        Assert.assertFalse(BanglishTransliterator.endingMatches("hitara", "হিটার"));
+    }
+
+    @Test
     public void everydayMixedSentences() {
         assertConverts("Kal sokal e meeting ache.", "কাল সকাল এ meeting আছে।");
         assertConverts("Kono problem nai.", "কোনো problem নাই।");
