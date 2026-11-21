@@ -7,6 +7,8 @@
  */
 package com.akshaykadam.pixelboard.extension.settings;
 
+import com.akshaykadam.pixelboard.extension.rambler.BouAiSettingsFeature;
+import com.akshaykadam.pixelboard.extension.updater.PixelBoardUpdateFeature;
 import android.content.Context;
 import android.util.Log;
 
@@ -26,8 +28,9 @@ public final class GboardPatchesSettingsFeatureRegistry {
         List<GboardPatchesSettingsContract.Feature> features =
                 new ArrayList<GboardPatchesSettingsContract.Feature>();
         addIfAvailable(context, features, new GboardAiVoiceSettingsGroupFeature(context));
-        // In-app updater removed: it pulls upstream releases, which drop the Banglish converter
-        // and are signed with a different key.
+        addIfAvailable(context, features, new BouAiSettingsFeature(context));
+        // Updates come from Bou's own GitHub releases (same signing key), never upstream.
+        addIfAvailable(context, features, new PixelBoardUpdateFeature(context));
         return Collections.unmodifiableList(features);
     }
 

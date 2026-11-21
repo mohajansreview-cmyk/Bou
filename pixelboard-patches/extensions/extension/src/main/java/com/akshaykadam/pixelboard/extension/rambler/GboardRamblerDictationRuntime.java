@@ -412,6 +412,15 @@ public final class GboardRamblerDictationRuntime {
         boolean eligible = (intent == 0 || intent == 2 || intent == 5) && !hasDiff
                 && BanglishTransliterator.needsConversion(text);
         String converted = eligible ? BanglishTransliterator.convert(text) : text;
+        if (eligible) {
+            // AI mode (opt-in, user's own key) understands the whole sentence; any failure keeps
+            // the offline result.
+            String ai = BouAiRewriter.rewrite(
+                    GboardRambler1803OfficialSelectionRuntime.applicationContext(), text, converted);
+            if (ai != null) {
+                converted = ai;
+            }
+        }
         if (eligible && !converted.equals(text)) {
             textSpanField.set(span, converted);
         }
