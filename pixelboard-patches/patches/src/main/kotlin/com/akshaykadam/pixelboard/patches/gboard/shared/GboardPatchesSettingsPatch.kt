@@ -503,7 +503,7 @@ internal fun applyPixelboardStringsOverride() = with(context) {
             }
         }
 
-        val localizedUpdatesTitle = UPDATES_TITLE_TRANSLATIONS[lang] ?: "PixelBoard updates"
+        val localizedUpdatesTitle = UPDATES_TITLE_TRANSLATIONS[lang] ?: "Bou updates"
         if (!text.contains("name=\"pixelboard_patches_updates_title\"")) {
             val endResourcesIndex = text.lastIndexOf("</resources>")
             if (endResourcesIndex >= 0) {
@@ -561,9 +561,9 @@ internal fun Element.setAndroidAttribute(localName: String, value: String) {
     }
 }
 
-internal const val PIXELBOARD_SETTINGS_TITLE = "PixelBoard Settings"
-internal const val PIXELBOARD_SPELL_CHECKER_LABEL = "PixelBoard Spell Checker"
-internal const val PIXELBOARD_SPELL_CHECKER_SETTINGS_LABEL = "PixelBoard Spell Checker Settings"
+internal const val PIXELBOARD_SETTINGS_TITLE = "Bou Settings"
+internal const val PIXELBOARD_SPELL_CHECKER_LABEL = "Bou Spell Checker"
+internal const val PIXELBOARD_SPELL_CHECKER_SETTINGS_LABEL = "Bou Spell Checker Settings"
 internal const val GBOARD_SETTINGS_ACTIVITY_CLASS =
     "com.google.android.apps.inputmethod.latin.preference.SettingsActivity"
 internal const val GBOARD_SPELL_CHECKER_SERVICE_CLASS =
@@ -614,24 +614,24 @@ private val SETTINGS_TITLE_TRANSLATIONS = mapOf(
 )
 
 private val UPDATES_TITLE_TRANSLATIONS = mapOf(
-    "en" to "PixelBoard updates",
-    "es" to "Actualizaciones de PixelBoard",
-    "fr" to "Mises à jour de PixelBoard",
-    "de" to "PixelBoard-Updates",
-    "it" to "Aggiornamenti PixelBoard",
-    "pt" to "Atualizações do PixelBoard",
-    "ru" to "Обновления PixelBoard",
-    "hi" to "PixelBoard अपडेट",
-    "ja" to "PixelBoardのアップデート",
-    "ko" to "PixelBoard 업데이트",
-    "zh" to "PixelBoard 更新",
-    "ar" to "تحديثات PixelBoard",
-    "in" to "Pembaruan PixelBoard",
-    "id" to "Pembaruan PixelBoard",
-    "tr" to "PixelBoard güncellemeleri",
-    "vi" to "Cập nhật PixelBoard",
-    "pl" to "Aktualizacje PixelBoard",
-    "nl" to "PixelBoard-updates",
-    "th" to "อัปเดต PixelBoard",
-    "uk" to "Оновлення PixelBoard",
+    "en" to "Bou updates",
+    "es" to "Actualizaciones de Bou",
+    "fr" to "Mises à jour de Bou",
+    "de" to "Bou-Updates",
+    "it" to "Aggiornamenti Bou",
+    "pt" to "Atualizações do Bou",
+    "ru" to "Обновления Bou",
+    "hi" to "Bou अपडेट",
+    "ja" to "Bouのアップデート",
+    "ko" to "Bou 업데이트",
+    "zh" to "Bou 更新",
+    "ar" to "تحديثات Bou",
+    "in" to "Pembaruan Bou",
+    "id" to "Pembaruan Bou",
+    "tr" to "Bou güncellemeleri",
+    "vi" to "Cập nhật Bou",
+    "pl" to "Aktualizacje Bou",
+    "nl" to "Bou-updates",
+    "th" to "อัปเดต Bou",
+    "uk" to "Оновлення Bou",
 )

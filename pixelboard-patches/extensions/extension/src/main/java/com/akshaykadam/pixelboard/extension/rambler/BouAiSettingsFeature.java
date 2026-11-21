@@ -57,7 +57,7 @@ public final class BouAiSettingsFeature implements GboardPatchesSettingsContract
                 hasKey ? "বসানো আছে (…" + key.substring(Math.max(0, key.length() - 4)) + ")" : "বসানো নেই",
                 true,
                 () -> GboardPatchesSettingsContract.showTextInputDialog(host, "Gemini API key",
-                        "AIza…", "", value -> {
+                        "এখানে key paste করুন", "", value -> {
                             String v = value == null ? "" : value.trim();
                             SharedPreferences.Editor e = p.edit().putString(BouAiRewriter.KEY_API_KEY, v);
                             if (v.isEmpty()) {
