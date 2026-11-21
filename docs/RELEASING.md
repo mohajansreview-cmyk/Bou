@@ -87,6 +87,18 @@ export PATH="$JAVA_HOME/bin:$ANDROID_HOME/build-tools/36.1.0:$PATH"
 3. Pick stock Gboard 18.6.3.100 (APKMirror) → select all 4 patches → Patch → Install.
 4. Keep the patched app; it installs beside stock Gboard as "Bou".
 
+## In-app updates
+
+The app checks `https://api.github.com/repos/mohajansreview-cmyk/Bou/releases/latest`
+(`PixelBoardUpdateManager.GITHUB_REPO_API`) and offers the first `.apk` asset of the latest
+release. For that to work:
+- Rename the GitHub repo from `PixelBoard` to `Bou` before the first public release
+  (Settings → General → Repository name), or change the two URLs in `PixelBoardUpdateManager`.
+- Every release must be signed with `bou-release.keystore`; Android refuses an update signed
+  with a different key.
+- Bump the version so it is higher than the installed one. Android never installs silently
+  outside the Play Store: the user gets a notification and taps Install once.
+
 ## If a release is taken down
 
 The patch bundle route keeps working as long as the source repo is up: users patch their own
