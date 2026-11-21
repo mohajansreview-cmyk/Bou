@@ -138,21 +138,71 @@ public final class BouAiRewriter {
         return text.toString();
     }
 
+    /** Remembers which way of sending the key worked, so later calls try it first. */
+    private static volatile int workingAuth = 0;
+
+    /**
+     * Sends the request, trying each way Google accepts a key: classic keys (AIza) in the
+     * x-goog-api-key header, newer AI Studio keys (AQ.) as a bearer token, then the key query.
+     */
     private static String call(String apiKey, String banglish, String draft) throws Exception {
-        HttpURLConnection conn = (HttpURLConnection) new URL(ENDPOINT).openConnection();
+        Exception last = null;
+        for (int i = 0; i < 3; i++) {
+            int auth = (workingAuth + i) % 3;
+            try {
+                String reply = callWith(auth, apiKey, banglish, draft);
+                workingAuth = auth;
+                return reply;
+            } catch (AuthRejected e) {
+                last = e;
+            }
+        }
+        throw last;
+    }
+
+    /** Result for the settings screen's key test: null when the key works, else a short reason. */
+    public static String testKey(String apiKey) {
+        if (apiKey == null || apiKey.trim().isEmpty()) {
+            return "key বসানো নেই";
+        }
+        try {
+            String reply = call(apiKey.trim(), "ami bhalo achi", null);
+            return reply == null || reply.trim().isEmpty() ? "Google কোনো উত্তর দেয়নি" : null;
+        } catch (AuthRejected e) {
+            return "key গ্রহণ করেনি (" + e.getMessage() + ")। Copy key দিয়ে আবার কপি করুন।";
+        } catch (Exception e) {
+            return "ইন্টারনেট বা Google-এ সমস্যা: " + e.getClass().getSimpleName();
+        }
+    }
+
+    static final class AuthRejected extends Exception {
+        AuthRejected(String message) {
+            super(message);
+        }
+    }
+
+    private static String callWith(int auth, String apiKey, String banglish, String draft) throws Exception {
+        String endpoint = auth == 2 ? ENDPOINT + "?key=" + java.net.URLEncoder.encode(apiKey, "UTF-8") : ENDPOINT;
+        HttpURLConnection conn = (HttpURLConnection) new URL(endpoint).openConnection();
         try {
             conn.setRequestMethod("POST");
             conn.setConnectTimeout((int) TIMEOUT_MS);
             conn.setReadTimeout((int) TIMEOUT_MS);
             conn.setDoOutput(true);
             conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-            // Key in a header, never in the URL, so it does not end up in logs or proxies.
-            conn.setRequestProperty("x-goog-api-key", apiKey);
+            if (auth == 0) {
+                conn.setRequestProperty("x-goog-api-key", apiKey);
+            } else if (auth == 1) {
+                conn.setRequestProperty("Authorization", "Bearer " + apiKey);
+            }
             byte[] payload = buildRequestBody(banglish, draft).getBytes(StandardCharsets.UTF_8);
             try (OutputStream os = conn.getOutputStream()) {
                 os.write(payload);
             }
             int code = conn.getResponseCode();
+            if (code == 400 || code == 401 || code == 403) {
+                throw new AuthRejected("HTTP " + code);
+            }
             if (code != 200) {
                 Log.w(TAG, "AI mode HTTP " + code);
                 return null;
