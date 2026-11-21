@@ -340,7 +340,7 @@ public final class PixelBoardUpdateFeature implements GboardPatchesSettingsContr
                 true));
         infoRows.add(new GboardPatchesSettingsContract.DetailRow(
                 "Package Name",
-                context != null ? context.getPackageName() : "com.akshaykadam.pixelboard",
+                context != null ? context.getPackageName() : "com.subratamohajan.bou",
                 true));
         infoRows.add(new GboardPatchesSettingsContract.DetailRow(
                 "Author",

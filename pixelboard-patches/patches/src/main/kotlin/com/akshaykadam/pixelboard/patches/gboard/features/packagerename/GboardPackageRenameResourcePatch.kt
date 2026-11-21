@@ -652,7 +652,8 @@ private data class SettingsIdentity(
     val targetPackages: List<Attr>,
 )
 
-private const val DOUBLE_PREFIX =
-    "com.akshaykadam.com.akshaykadam.pixelboard"
+// The renamed package with its own prefix applied twice (a rename bug this patch guards against).
+private val DOUBLE_PREFIX =
+    GBOARD_PATCHED_PACKAGE_NAME.substringBeforeLast('.') + "." + GBOARD_PATCHED_PACKAGE_NAME
 
 private const val REQUIRED_SPLITS_METADATA = "com.android.vending.splits.required"
