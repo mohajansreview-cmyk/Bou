@@ -172,7 +172,7 @@ public final class GboardPatchesSettingsActivity extends Activity
     private static final int TOOLBAR_HEIGHT_DP = 56;
     private static final int NO_SCROLL_POSITION_REQUESTED = -1;
     private static final String TOOLBAR_TITLE_PATCHES = "Patches";
-    private static final String ABOUT_AUTHOR_URL = "https://github.com/Akshayykadam";
+    private static final String ABOUT_AUTHOR_URL = "https://subrata.fedardokan.com";
     private static final String ABOUT_PATCH_REPOSITORY_URL =
             "https://github.com/mohajansreview-cmyk/Bou";
     private static final String DOCUMENT_TYPE_FALLBACK = "text/plain";

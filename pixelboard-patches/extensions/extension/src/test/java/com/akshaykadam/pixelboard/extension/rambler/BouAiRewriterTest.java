@@ -38,6 +38,10 @@ public final class BouAiRewriterTest {
         Assert.assertTrue(user.contains("tui kodde jaibi?"));
         Assert.assertTrue(user.contains("তুই কোদ্দে যাইবি?"));
         Assert.assertEquals(0, body.getJSONObject("generationConfig").getInt("temperature"));
+        // Gemini 3 models answer HTTP 400 to thinkingBudget 0; thinkingLevel works on them.
+        JSONObject thinking = body.getJSONObject("generationConfig").getJSONObject("thinkingConfig");
+        Assert.assertEquals("minimal", thinking.getString("thinkingLevel"));
+        Assert.assertFalse(thinking.has("thinkingBudget"));
     }
 
     @Test

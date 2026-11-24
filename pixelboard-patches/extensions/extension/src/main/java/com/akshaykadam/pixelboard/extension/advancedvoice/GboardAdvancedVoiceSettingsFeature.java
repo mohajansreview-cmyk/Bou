@@ -31,7 +31,7 @@ public final class GboardAdvancedVoiceSettingsFeature
     private static final String APKMIRROR_DOWNLOAD_URL =
             "https://www.apkmirror.com/apk/google-inc/gboard/gboard-the-google-keyboard-18-4-1-985164140-release/";
     private static final String ADVANCED_VOICE_GITHUB_URL =
-            "https://github.com/Akshayykadam/PixelBoard";
+            "https://github.com/mohajansreview-cmyk/Bou";
 
     private final String entryTitle;
     private final String entrySummary;

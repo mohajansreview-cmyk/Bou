@@ -344,7 +344,11 @@ public final class PixelBoardUpdateFeature implements GboardPatchesSettingsContr
                 true));
         infoRows.add(new GboardPatchesSettingsContract.DetailRow(
                 "Author",
-                "Akshay Kadam (@Akshayykadam)",
+                "Subrata Mohajan",
+                true));
+        infoRows.add(new GboardPatchesSettingsContract.DetailRow(
+                "Based on",
+                "PixelBoard by Akshay Kadam (GPL-3.0)",
                 true));
 
         sections.add(new GboardPatchesSettingsContract.Section(

@@ -59,12 +59,9 @@ Current measured quality: 81.8% word accuracy on 2,940 romanized ONUBAD dialect 
 
 ## 4. Support the maker (next plan, owner 2026-11-22)
 
-- Add a "Buy me a coffee" style support option next to contributing: on the website
-  (/contribute and footer), in the GitHub README, and maybe a small row in Bou settings.
-- Options to compare first: bKash/Nagad merchant QR (local), Buy Me a Coffee, Ko-fi, GitHub
-  Sponsors. Owner decides; never put personal phone numbers or card details in the repo.
+- Decided 2026-11-25: SupportKori, not Buy Me a Coffee. Plan in `logo-and-support.md`.
 
-## 5. Owner name everywhere (next plan, owner 2026-11-24)
+## 5. Owner name everywhere (done 2026-11-25, release 1.4.7)
 
 - Bou updates screen "Author" must show **Subrata Mohajan** (now shows Akshay Kadam).
 - Put "Subrata Mohajan" wherever the app shows a maker: settings footer, about rows, release notes, website.
