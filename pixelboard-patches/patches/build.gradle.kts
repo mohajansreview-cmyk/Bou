@@ -154,12 +154,12 @@ val generateGboardVersionBindings = tasks.register<GenerateTargetBindingsTask>(
 
 patches {
     about {
-        name = "PixelBoard Patches"
-        description = "Patches for PixelBoard (Gboard)."
-        source = "https://github.com/Akshayykadam/PixelBoard"
-        author = "Akshay Kadam"
-        contact = "https://github.com/Akshayykadam/PixelBoard/issues"
-        website = "https://github.com/Akshayykadam/PixelBoard"
+        name = "Bou Patches"
+        description = "Bou: Bangla voice keyboard patches, based on PixelBoard by Akshay Kadam."
+        source = "https://github.com/mohajansreview-cmyk/Bou"
+        author = "Subrata Mohajan"
+        contact = "https://github.com/mohajansreview-cmyk/Bou/issues"
+        website = "https://bou-keyboard.vercel.app"
         license = "GPLv3"
     }
 }

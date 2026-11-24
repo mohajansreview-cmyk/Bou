@@ -32,10 +32,12 @@ public final class BouAiRewriter {
     static final String KEY_ENABLED = "enabled";
     static final String KEY_API_KEY = "api_key";
     /** Tried in order; "-latest" aliases survive Google retiring a model version. */
-    static final String[] MODELS = {"gemini-flash-lite-latest", "gemini-2.5-flash-lite", "gemini-flash-latest"};
+    static final String[] MODELS = {"gemini-flash-lite-latest", "gemini-3.5-flash-lite", "gemini-flash-latest"};
     private static final String API = "https://generativelanguage.googleapis.com/v1beta/models/";
     /** Longest the keyboard waits for the AI before falling back to the offline result. */
-    static final long TIMEOUT_MS = 1800;
+    static final long TIMEOUT_MS = 2500;
+    /** The settings key test may wait longer: it reports a result, it does not block typing. */
+    static final int TEST_TIMEOUT_MS = 15000;
 
     static final String INSTRUCTIONS =
             "You convert Bengali speech that a speech recognizer wrote in Latin letters (Banglish) "
@@ -81,7 +83,7 @@ public final class BouAiRewriter {
             return null;
         }
         final String apiKey = preferences(context).getString(KEY_API_KEY, "").trim();
-        Future<String> future = EXECUTOR.submit(() -> call(apiKey, banglish, draft));
+        Future<String> future = EXECUTOR.submit(() -> call(apiKey, banglish, draft, (int) TIMEOUT_MS));
         try {
             return accept(banglish, future.get(TIMEOUT_MS, TimeUnit.MILLISECONDS));
         } catch (Throwable t) {
@@ -116,9 +118,10 @@ public final class BouAiRewriter {
         body.put("contents", new JSONArray().put(new JSONObject()
                 .put("role", "user")
                 .put("parts", new JSONArray().put(new JSONObject().put("text", user)))));
-        // Thinking off and room to answer: thinking used to eat the whole budget, leaving no text.
+        // Least thinking and room to answer: thinking used to eat the whole budget, leaving no text.
+        // Gemini 3 models reject thinkingBudget 0 with HTTP 400, so use thinkingLevel instead.
         body.put("generationConfig", new JSONObject().put("temperature", 0).put("maxOutputTokens", 1024)
-                .put("thinkingConfig", new JSONObject().put("thinkingBudget", 0)));
+                .put("thinkingConfig", new JSONObject().put("thinkingLevel", "minimal")));
         return body.toString();
     }
 
@@ -149,18 +152,18 @@ public final class BouAiRewriter {
      */
     private static volatile int workingModel = 0;
 
-    private static String call(String apiKey, String banglish, String draft) throws Exception {
+    private static String call(String apiKey, String banglish, String draft, int timeoutMs) throws Exception {
         Exception last = null;
         for (int m = 0; m < MODELS.length; m++) {
             int model = (workingModel + m) % MODELS.length;
             try {
-                String reply = callModel(MODELS[model], apiKey, banglish, draft);
+                String reply = callModel(MODELS[model], apiKey, banglish, draft, timeoutMs);
                 if (reply != null && !reply.trim().isEmpty()) {
                     workingModel = model;
                     return reply;
                 }
             } catch (java.io.IOException e) {
-                last = e; // model retired (404) or busy (429/503): try the next one
+                last = e; // bad request (400), model retired (404) or busy (429/503): try the next one
             }
         }
         if (last != null) {
@@ -169,12 +172,13 @@ public final class BouAiRewriter {
         return null;
     }
 
-    private static String callModel(String model, String apiKey, String banglish, String draft) throws Exception {
+    private static String callModel(String model, String apiKey, String banglish, String draft, int timeoutMs)
+            throws Exception {
         Exception last = null;
         for (int i = 0; i < 3; i++) {
             int auth = (workingAuth + i) % 3;
             try {
-                String reply = callWith(model, auth, apiKey, banglish, draft);
+                String reply = callWith(model, auth, apiKey, banglish, draft, timeoutMs);
                 workingAuth = auth;
                 return reply;
             } catch (AuthRejected e) {
@@ -190,7 +194,7 @@ public final class BouAiRewriter {
             return "key বসানো নেই";
         }
         try {
-            String reply = call(apiKey.trim(), "ami bhalo achi", null);
+            String reply = call(apiKey.trim(), "ami bhalo achi", null, TEST_TIMEOUT_MS);
             return reply == null || reply.trim().isEmpty() ? "Google কোনো উত্তর দেয়নি" : null;
         } catch (AuthRejected e) {
             return "key গ্রহণ করেনি (" + e.getMessage() + ")। Copy key দিয়ে আবার কপি করুন।";
@@ -205,15 +209,15 @@ public final class BouAiRewriter {
         }
     }
 
-    private static String callWith(String model, int auth, String apiKey, String banglish, String draft)
-            throws Exception {
+    private static String callWith(String model, int auth, String apiKey, String banglish, String draft,
+            int timeoutMs) throws Exception {
         String endpoint = API + model + ":generateContent"
                 + (auth == 2 ? "?key=" + java.net.URLEncoder.encode(apiKey, "UTF-8") : "");
         HttpURLConnection conn = (HttpURLConnection) new URL(endpoint).openConnection();
         try {
             conn.setRequestMethod("POST");
-            conn.setConnectTimeout((int) TIMEOUT_MS);
-            conn.setReadTimeout((int) TIMEOUT_MS);
+            conn.setConnectTimeout(timeoutMs);
+            conn.setReadTimeout(timeoutMs);
             conn.setDoOutput(true);
             conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
             if (auth == 0) {
@@ -226,7 +230,8 @@ public final class BouAiRewriter {
                 os.write(payload);
             }
             int code = conn.getResponseCode();
-            if (code == 400 || code == 401 || code == 403) {
+            // 400 is a bad request (e.g. a setting a new model refuses), not a bad key: report its reason.
+            if (code == 401 || code == 403) {
                 throw new AuthRejected("HTTP " + code);
             }
             if (code != 200) {
