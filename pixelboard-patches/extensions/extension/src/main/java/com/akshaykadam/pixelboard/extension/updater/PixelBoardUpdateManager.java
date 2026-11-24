@@ -45,9 +45,9 @@ public final class PixelBoardUpdateManager {
     private static final String TAG = "PixelBoardUpdate";
 
     public static final String GITHUB_REPO_API =
-            "https://api.github.com/repos/mohajansreview-cmyk/Bou/releases/latest";
+            "https://api.github.com/repos/subrata-mohajan/Bou/releases/latest";
     public static final String GITHUB_REPO_RELEASES_WEB =
-            "https://github.com/mohajansreview-cmyk/Bou/releases";
+            "https://github.com/subrata-mohajan/Bou/releases";
 
     private static final String PREF_NAME = "pixelboard_updates";
     private static final String PREF_KEY_AUTO_CHECK = "auto_check_updates";

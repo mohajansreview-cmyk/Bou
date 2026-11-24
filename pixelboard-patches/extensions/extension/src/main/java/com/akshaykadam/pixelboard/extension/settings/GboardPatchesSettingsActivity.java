@@ -173,8 +173,9 @@ public final class GboardPatchesSettingsActivity extends Activity
     private static final int NO_SCROLL_POSITION_REQUESTED = -1;
     private static final String TOOLBAR_TITLE_PATCHES = "Patches";
     private static final String ABOUT_AUTHOR_URL = "https://subrata.fedardokan.com";
+    private static final String SUPPORT_URL = "https://www.supportkori.com/subratamohajan";
     private static final String ABOUT_PATCH_REPOSITORY_URL =
-            "https://github.com/mohajansreview-cmyk/Bou";
+            "https://github.com/subrata-mohajan/Bou";
     private static final String DOCUMENT_TYPE_FALLBACK = "text/plain";
     private static final String DOCUMENT_PICKER_FAILED = "Unable to open file picker.";
     private static final String DOCUMENT_WRITE_FAILED = "Failed to export file.";
@@ -3244,6 +3245,11 @@ public final class GboardPatchesSettingsActivity extends Activity
                 }
             }
         }
+        bouRows.add(new GboardPatchesSettingsContract.NavigationRow(
+                "Bou-কে সাহায্য করুন",
+                "SupportKori-তে bKash, Nagad বা card দিয়ে নির্মাতাকে এক কাপ চা খাওয়ান",
+                true,
+                () -> openExternalUrl(SUPPORT_URL)));
         if (!bouRows.isEmpty()) {
             sections.add(new GboardPatchesSettingsContract.Section("Bou", bouRows));
         }

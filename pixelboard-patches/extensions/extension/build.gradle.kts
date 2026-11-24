@@ -77,7 +77,7 @@ android {
         buildConfigField(
             "String",
             "PATCH_REPOSITORY_URL",
-            "\"https://github.com/mohajansreview-cmyk/Bou\""
+            "\"https://github.com/subrata-mohajan/Bou\""
         )
         buildConfigField("String", "PATCH_VERSION", "\"${project.version}\"")
     }

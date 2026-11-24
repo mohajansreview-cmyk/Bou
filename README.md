@@ -21,13 +21,13 @@ Website: **https://bou-keyboard.vercel.app** · Made by **[Subrata Mohajan](http
 ## Install
 
 **APK (easiest):** download `Bou.apk` from the
-[latest release](https://github.com/mohajansreview-cmyk/Bou/releases/latest), install it, then
+[latest release](https://github.com/subrata-mohajan/Bou/releases/latest), install it, then
 Settings → System → Languages & input → On-screen keyboard → turn on **Bou**. In Bou's settings
 pick Voice typing → Dictation type → **Rambler**. Step-by-step in Bangla:
 https://bou-keyboard.vercel.app/install
 
 **Patch it yourself (Morphe Manager):** add this patch source
-`https://raw.githubusercontent.com/mohajansreview-cmyk/Bou/main/patches-bundle.json`, pick stock
+`https://raw.githubusercontent.com/subrata-mohajan/Bou/main/patches-bundle.json`, pick stock
 Gboard **18.6.3.100** (arm64), select all patches and install. Guide:
 https://bou-keyboard.vercel.app/patch
 
@@ -44,10 +44,11 @@ token with `read:packages`, and stock Gboard 18.6.3.100.
 
 ## Contribute and contact
 
-- A Bengali or regional word came out wrong? [Report the word](https://github.com/mohajansreview-cmyk/Bou/issues/new?template=wrong-word.yml) — this grows the word list for everyone.
-- Bugs and ideas: [Issues](https://github.com/mohajansreview-cmyk/Bou/issues/new/choose). Questions: [Discussions](https://github.com/mohajansreview-cmyk/Bou/discussions).
+- A Bengali or regional word came out wrong? [Report the word](https://github.com/subrata-mohajan/Bou/issues/new?template=wrong-word.yml) — this grows the word list for everyone.
+- Bugs and ideas: [Issues](https://github.com/subrata-mohajan/Bou/issues/new/choose). Questions: [Discussions](https://github.com/subrata-mohajan/Bou/discussions).
 - Code: read [CONTRIBUTING.md](CONTRIBUTING.md).
 - Talk to the maker: [Subrata Mohajan](https://subrata.fedardokan.com).
+- Like Bou? [Support the maker on SupportKori](https://www.supportkori.com/subratamohajan) (bKash, Nagad, card).
 
 ## Licence and credits
 

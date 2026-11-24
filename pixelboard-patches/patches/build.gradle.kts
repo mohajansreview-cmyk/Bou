@@ -156,9 +156,9 @@ patches {
     about {
         name = "Bou Patches"
         description = "Bou: Bangla voice keyboard patches, based on PixelBoard by Akshay Kadam."
-        source = "https://github.com/mohajansreview-cmyk/Bou"
+        source = "https://github.com/subrata-mohajan/Bou"
         author = "Subrata Mohajan"
-        contact = "https://github.com/mohajansreview-cmyk/Bou/issues"
+        contact = "https://github.com/subrata-mohajan/Bou/issues"
         website = "https://bou-keyboard.vercel.app"
         license = "GPLv3"
     }
