@@ -31,9 +31,9 @@ public final class BouAiRewriter {
     static final String PREFS = "bou_ai_mode";
     static final String KEY_ENABLED = "enabled";
     static final String KEY_API_KEY = "api_key";
-    static final String MODEL = "gemini-2.5-flash-lite";
-    private static final String ENDPOINT =
-            "https://generativelanguage.googleapis.com/v1beta/models/" + MODEL + ":generateContent";
+    /** Tried in order; "-latest" aliases survive Google retiring a model version. */
+    static final String[] MODELS = {"gemini-flash-lite-latest", "gemini-2.5-flash-lite", "gemini-flash-latest"};
+    private static final String API = "https://generativelanguage.googleapis.com/v1beta/models/";
     /** Longest the keyboard waits for the AI before falling back to the offline result. */
     static final long TIMEOUT_MS = 1800;
 
@@ -116,7 +116,9 @@ public final class BouAiRewriter {
         body.put("contents", new JSONArray().put(new JSONObject()
                 .put("role", "user")
                 .put("parts", new JSONArray().put(new JSONObject().put("text", user)))));
-        body.put("generationConfig", new JSONObject().put("temperature", 0).put("maxOutputTokens", 256));
+        // Thinking off and room to answer: thinking used to eat the whole budget, leaving no text.
+        body.put("generationConfig", new JSONObject().put("temperature", 0).put("maxOutputTokens", 1024)
+                .put("thinkingConfig", new JSONObject().put("thinkingBudget", 0)));
         return body.toString();
     }
 
@@ -145,12 +147,34 @@ public final class BouAiRewriter {
      * Sends the request, trying each way Google accepts a key: classic keys (AIza) in the
      * x-goog-api-key header, newer AI Studio keys (AQ.) as a bearer token, then the key query.
      */
+    private static volatile int workingModel = 0;
+
     private static String call(String apiKey, String banglish, String draft) throws Exception {
+        Exception last = null;
+        for (int m = 0; m < MODELS.length; m++) {
+            int model = (workingModel + m) % MODELS.length;
+            try {
+                String reply = callModel(MODELS[model], apiKey, banglish, draft);
+                if (reply != null && !reply.trim().isEmpty()) {
+                    workingModel = model;
+                    return reply;
+                }
+            } catch (java.io.IOException e) {
+                last = e; // model retired (404) or busy (429/503): try the next one
+            }
+        }
+        if (last != null) {
+            throw last;
+        }
+        return null;
+    }
+
+    private static String callModel(String model, String apiKey, String banglish, String draft) throws Exception {
         Exception last = null;
         for (int i = 0; i < 3; i++) {
             int auth = (workingAuth + i) % 3;
             try {
-                String reply = callWith(auth, apiKey, banglish, draft);
+                String reply = callWith(model, auth, apiKey, banglish, draft);
                 workingAuth = auth;
                 return reply;
             } catch (AuthRejected e) {
@@ -171,7 +195,7 @@ public final class BouAiRewriter {
         } catch (AuthRejected e) {
             return "key গ্রহণ করেনি (" + e.getMessage() + ")। Copy key দিয়ে আবার কপি করুন।";
         } catch (Exception e) {
-            return "ইন্টারনেট বা Google-এ সমস্যা: " + e.getClass().getSimpleName();
+            return "Google-এর উত্তর: " + (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage());
         }
     }
 
@@ -181,8 +205,10 @@ public final class BouAiRewriter {
         }
     }
 
-    private static String callWith(int auth, String apiKey, String banglish, String draft) throws Exception {
-        String endpoint = auth == 2 ? ENDPOINT + "?key=" + java.net.URLEncoder.encode(apiKey, "UTF-8") : ENDPOINT;
+    private static String callWith(String model, int auth, String apiKey, String banglish, String draft)
+            throws Exception {
+        String endpoint = API + model + ":generateContent"
+                + (auth == 2 ? "?key=" + java.net.URLEncoder.encode(apiKey, "UTF-8") : "");
         HttpURLConnection conn = (HttpURLConnection) new URL(endpoint).openConnection();
         try {
             conn.setRequestMethod("POST");
@@ -204,8 +230,25 @@ public final class BouAiRewriter {
                 throw new AuthRejected("HTTP " + code);
             }
             if (code != 200) {
-                Log.w(TAG, "AI mode HTTP " + code);
-                return null;
+                // Surface Google's own reason (wrong model, quota, region) instead of a silent null.
+                String reason = "";
+                try (InputStream err = conn.getErrorStream()) {
+                    if (err != null) {
+                        ByteArrayOutputStream eb = new ByteArrayOutputStream();
+                        byte[] ch = new byte[2048];
+                        int k;
+                        while ((k = err.read(ch)) > 0 && eb.size() < 8192) {
+                            eb.write(ch, 0, k);
+                        }
+                        JSONObject e = new JSONObject(new String(eb.toByteArray(), StandardCharsets.UTF_8))
+                                .optJSONObject("error");
+                        reason = e == null ? "" : e.optString("message", "");
+                    }
+                } catch (Exception ignored) {
+                    // keep the bare code
+                }
+                Log.w(TAG, "AI mode HTTP " + code + " " + reason);
+                throw new java.io.IOException("HTTP " + code + (reason.isEmpty() ? "" : ": " + reason));
             }
             try (InputStream in = conn.getInputStream()) {
                 ByteArrayOutputStream buf = new ByteArrayOutputStream();

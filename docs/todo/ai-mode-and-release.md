@@ -63,3 +63,9 @@ Current measured quality: 81.8% word accuracy on 2,940 romanized ONUBAD dialect 
   (/contribute and footer), in the GitHub README, and maybe a small row in Bou settings.
 - Options to compare first: bKash/Nagad merchant QR (local), Buy Me a Coffee, Ko-fi, GitHub
   Sponsors. Owner decides; never put personal phone numbers or card details in the repo.
+
+## 5. Owner name everywhere (next plan, owner 2026-11-24)
+
+- Bou updates screen "Author" must show **Subrata Mohajan** (now shows Akshay Kadam).
+- Put "Subrata Mohajan" wherever the app shows a maker: settings footer, about rows, release notes, website.
+- Keep upstream credit only where GPL needs it (LICENSE, README credits, file headers).
