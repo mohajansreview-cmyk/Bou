@@ -2,9 +2,9 @@
 
 Send from: Subrata Mohajan's own email. Owner sends it; Claude does not.
 
-To: the RegSpeech12 authors, Md. Rezuwan Hassan and Farig Sadeque (BRAC University).
-Find their current emails on the paper page: https://arxiv.org/abs/2510.24096 (or the Kaggle
-dataset page: https://www.kaggle.com/datasets/mdrezuwanhassan/regspeech12).
+To: farig.sadeque@bracu.ac.bd (Dr. Farig Yousuf Sadeque, BRAC University CSE faculty page).
+Md. Rezuwan Hassan's email is not public; ask Dr. Sadeque to forward, or message him on the
+Kaggle dataset page: https://www.kaggle.com/datasets/mdrezuwanhassan/regspeech12.
 
 Subject: Permission to use RegSpeech12 transcripts in a free Bangla voice keyboard
 
@@ -25,6 +25,9 @@ with full credit to RegSpeech12 and your paper in the app, the source code and t
 The Kaggle page lists the licence as "Unknown". Could you tell me which licence the
 transcripts are released under, or give permission for this use? If you prefer a specific
 attribution text, I will use it exactly.
+
+App: https://bou-keyboard.vercel.app
+Source code: https://github.com/subrata-mohajan/Bou
 
 Thank you for creating this resource for Bangla.
 
