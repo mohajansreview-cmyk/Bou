@@ -32,7 +32,7 @@ Environment for every command below (Git Bash):
 export ANDROID_HOME="$LOCALAPPDATA/Android/Sdk"
 export JAVA_HOME="$(ls -d "/c/Program Files/Microsoft/"jdk-21* | head -1)"
 export JAVA_TOOL_OPTIONS="-Djava.net.preferIPv4Stack=true"   # Java downloads time out over IPv6 here
-export GITHUB_ACTOR=mohajansreview-cmyk GITHUB_TOKEN="$(gh auth token)"
+export GITHUB_ACTOR=subrata-mohajan GITHUB_TOKEN="$(gh auth token)"
 export PATH="$JAVA_HOME/bin:$ANDROID_HOME/build-tools/36.1.0:$PATH"
 ```
 
@@ -68,7 +68,7 @@ export PATH="$JAVA_HOME/bin:$ANDROID_HOME/build-tools/36.1.0:$PATH"
 7. **Rename assets:** `Bou-<version>.apk`, `patches-<version>.mpp`.
 8. **Patch bundle manifest:** update `patches-bundle.json` at the repo root:
    `version`, `created_at`, a short changelog in `description`, and
-   `download_url` = `https://github.com/mohajansreview-cmyk/<repo>/releases/download/v<version>/patches-<version>.mpp`.
+   `download_url` = `https://github.com/subrata-mohajan/<repo>/releases/download/v<version>/patches-<version>.mpp`.
 9. **Merge and tag** (owner's go-ahead): PR `feat/*` → `main`, then
    `git tag v<version> && git push origin v<version>`. No AI attribution anywhere.
 10. **Make the source public** (first release only, owner's go-ahead): repo Settings → General →
@@ -76,7 +76,7 @@ export PATH="$JAVA_HOME/bin:$ANDROID_HOME/build-tools/36.1.0:$PATH"
     and run `gitleaks git --no-banner --redact`.
 11. **GitHub Release:** `gh release create v<version> output/Bou-<version>.apk patches-<version>.mpp --title "Bou <version>" --notes-file <notes>`
 12. **Website:** the download buttons point at
-    `https://github.com/mohajansreview-cmyk/<repo>/releases/latest/download/Bou.apk` style URLs;
+    `https://github.com/subrata-mohajan/<repo>/releases/latest/download/Bou.apk` style URLs;
     when the repo goes public, set `NEXT_PUBLIC_RELEASES_LIVE=true` in Vercel and redeploy so the
     "শীঘ্রই আসছে" buttons turn into downloads.
 
@@ -89,7 +89,7 @@ export PATH="$JAVA_HOME/bin:$ANDROID_HOME/build-tools/36.1.0:$PATH"
 
 ## In-app updates
 
-The app checks `https://api.github.com/repos/mohajansreview-cmyk/Bou/releases/latest`
+The app checks `https://api.github.com/repos/subrata-mohajan/Bou/releases/latest`
 (`PixelBoardUpdateManager.GITHUB_REPO_API`) and offers the first `.apk` asset of the latest
 release. For that to work:
 - Rename the GitHub repo from `PixelBoard` to `Bou` before the first public release

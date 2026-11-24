@@ -6,16 +6,16 @@ Thank you for helping make Bangla voice typing better. Bou is made by
 ## The easiest way to help: report a wrong word
 
 If Bou writes a Bengali word wrong, especially a regional word, open a
-[wrong word report](https://github.com/mohajansreview-cmyk/Bou/issues/new?template=wrong-word.yml).
+[wrong word report](https://github.com/subrata-mohajan/Bou/issues/new?template=wrong-word.yml).
 Tell us what you said, what Bou wrote and what it should have written. These reports grow the
 regional word list for everyone.
 
 ## Other ways
 
-- **Something broken?** [Report a bug](https://github.com/mohajansreview-cmyk/Bou/issues/new?template=bug.yml).
-- **An idea?** [Suggest a feature](https://github.com/mohajansreview-cmyk/Bou/issues/new?template=feature.yml).
+- **Something broken?** [Report a bug](https://github.com/subrata-mohajan/Bou/issues/new?template=bug.yml).
+- **An idea?** [Suggest a feature](https://github.com/subrata-mohajan/Bou/issues/new?template=feature.yml).
 - **Questions, or want to talk first?** Use
-  [Discussions](https://github.com/mohajansreview-cmyk/Bou/discussions), or contact Subrata through
+  [Discussions](https://github.com/subrata-mohajan/Bou/discussions), or contact Subrata through
   [subrata.fedardokan.com](https://subrata.fedardokan.com).
 
 ## Contributing code
