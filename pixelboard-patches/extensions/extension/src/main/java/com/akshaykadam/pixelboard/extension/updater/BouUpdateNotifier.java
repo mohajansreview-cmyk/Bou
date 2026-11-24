@@ -99,7 +99,7 @@ public final class BouUpdateNotifier {
                 ? new Notification.Builder(context, CHANNEL_ID)
                 : new Notification.Builder(context);
         Notification n = builder
-                .setSmallIcon(context.getApplicationInfo().icon)
+                .setSmallIcon(BouBrand.notificationIcon())
                 .setContentTitle("Bou-এর নতুন version এসেছে")
                 .setContentText("Bou " + version + " পেতে চাপুন। আগের সব সেটিং থাকবে।")
                 .setContentIntent(tap)

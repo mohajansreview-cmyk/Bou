@@ -3233,6 +3233,14 @@ public final class GboardPatchesSettingsActivity extends Activity
         // Bou's own screens (AI mode, updates) live in the feature registry; list them first.
         List<GboardPatchesSettingsContract.Row> bouRows =
                 new ArrayList<GboardPatchesSettingsContract.Row>();
+        bouRows.add(new GboardPatchesSettingsContract.CommandRow(
+                "Bou",
+                "বাংলা ভয়েস কীবোর্ড, বানিয়েছেন Subrata Mohajan",
+                true,
+                () -> openExternalUrl("https://bou-keyboard.vercel.app"),
+                null,
+                new android.graphics.drawable.BitmapDrawable(getResources(),
+                        com.akshaykadam.pixelboard.extension.updater.BouBrand.appIcon())));
         if (features != null) {
             for (GboardPatchesSettingsContract.Feature feature : features) {
                 if (feature instanceof BouAiSettingsFeature

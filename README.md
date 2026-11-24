@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/logo/mark/bou-icon.svg" alt="Bou logo: a spoken wave that becomes the headline of the letter ব" width="120"></p>
+
 # Bou — বাংলা ভয়েস কীবোর্ড
 
 **বলো, লেখা হয়ে যাবে।** Speak Bengali, with English words mixed in, and Bou writes Bengali
