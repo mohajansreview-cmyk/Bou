@@ -174,6 +174,8 @@ public final class BanglishTransliterator {
         put(d, "manush", "মানুষ"); put(d, "jinish", "জিনিস"); put(d, "eid", "ঈদ");
         put(d, "pach", "পাঁচ"); put(d, "panch", "পাঁচ"); put(d, "chad", "চাঁদ");
         put(d, "shon", "শোন");
+        put(d, "bakko", "বাক্য"); put(d, "bakkyo", "বাক্য"); put(d, "bakyo", "বাক্য");
+        put(d, "ekoi", "একই"); put(d, "kate", "কাটে");
         // Dhaka past tense written with "s": disi = দিছি (gave), not দিচ্ছি (giving).
         put(d, "disi", "দিছি"); put(d, "dise", "দিছে"); put(d, "diso", "দিছো");
         put(d, "nisi", "নিছি"); put(d, "nise", "নিছে"); put(d, "niso", "নিছো"); put(d, "deo", "দেও"); put(d, "dokan", "দোকান"); put(d, "ki", "কি");
@@ -213,12 +215,15 @@ public final class BanglishTransliterator {
                 // Only words that are common in English too; rarer English look-alikes
                 // (pore, hoy, bole, mane...) are settled by frequency and come out Bengali.
                 "to", "a", "die", "hate", "more", "bad", "man", "tar", "ar", "kal", "ma", "re",
-                "boy", "tin", "sat", "tore", "she", "se", "or", "oke", "jai", "ja", "je", "hae", "ha"}) {
+                "boy", "tin", "sat", "tore", "she", "se", "or", "oke", "jai", "ja", "je", "hae", "ha",
+                "mane", "rate", "gate"}) {
             AMBIGUOUS.add(w);
         }
         for (String w : new String[] {
                 "bkash", "nagad", "imo", "whatsapp", "messenger", "gmail", "youtube", "facebook",
-                "ok", "okay"}) {
+                "ok", "okay", "github", "vercel", "google", "gemini", "chatgpt", "claude", "app",
+                "apps", "apk", "android", "iphone", "laptop", "wifi", "website", "online", "offline",
+                "update", "download", "upload", "link", "login", "email", "logo"}) {
             KEEP_ENGLISH.add(w);
         }
         FORCE_BENGALI.put("ta", "টা");
@@ -227,6 +232,46 @@ public final class BanglishTransliterator {
         FORCE_BENGALI.put("e", "এ");
         FORCE_BENGALI.put("o", "ও");
         FORCE_BENGALI.put("dhaka", "ঢাকা");
+    }
+
+
+    private static final java.util.regex.Pattern HYPHEN_SUFFIX = java.util.regex.Pattern.compile(
+            "(?<![A-Za-z])([A-Za-z]+)-(ta|ti|tai|i|oi|e|er|ke|ra|der|gulo|guli)(?![A-Za-z])");
+    private static final Map<String, String> SUFFIX_BN = new HashMap<String, String>();
+
+    static {
+        String[][] pairs = {{"ta", "টা"}, {"ti", "টি"}, {"tai", "টাই"}, {"i", "ই"}, {"oi", "ই"},
+                {"e", "এ"}, {"er", "এর"}, {"ke", "কে"}, {"ra", "রা"}, {"der", "দের"},
+                {"gulo", "গুলো"}, {"guli", "গুলি"}};
+        for (String[] p : pairs) {
+            SUFFIX_BN.put(p[0], p[1]);
+        }
+    }
+
+    /**
+     * Speech recognizers write Bengali suffixes after a hyphen (sat-ta, ek-oi, click-i). An English
+     * word keeps its spelling and gets the Bengali suffix (click-ই); otherwise the hyphen goes and
+     * the word is read whole (satta -> সাতটা).
+     */
+    static String joinHyphenSuffixes(String text) {
+        if (text.indexOf('-') < 0) {
+            return text;
+        }
+        java.util.regex.Matcher m = HYPHEN_SUFFIX.matcher(text);
+        StringBuffer out = new StringBuffer();
+        while (m.find()) {
+            String left = m.group(1);
+            String lower = left.toLowerCase(Locale.ROOT);
+            ensureLoaded();
+            boolean english = KEEP_ENGLISH.contains(lower) || isAcronym(left)
+                    || (englishRank.containsKey(lower) && !DICTIONARY.containsKey(lower)
+                            && !AMBIGUOUS.contains(lower) && lookupBengali(lower, false) == null);
+            String repl = english ? left + "-" + SUFFIX_BN.get(m.group(2).toLowerCase(Locale.ROOT))
+                    : left + m.group(2);
+            m.appendReplacement(out, java.util.regex.Matcher.quoteReplacement(repl));
+        }
+        m.appendTail(out);
+        return out.toString();
     }
 
     private static volatile Map<String, Object[][]> bengaliByKey; // key -> {{word, rank}, ...}
@@ -282,6 +327,7 @@ public final class BanglishTransliterator {
         if (text == null || text.isEmpty()) {
             return text;
         }
+        text = joinHyphenSuffixes(text);
         // Pass 1: split into whitespace-free chunks and decide every Latin word.
         List<String> chunks = new ArrayList<String>();
         List<List<Word>> chunkWords = new ArrayList<List<Word>>();
@@ -609,7 +655,7 @@ public final class BanglishTransliterator {
             // After a consonant (bolsi), "ai" (khaiso) or consonant+i (disi -> দিছি); not after
             // other vowels: "asi" is আসি.
             java.util.regex.Pattern.compile(
-                    "(.*(?:[^aeiou]|ai|[^aeiou]i))s(i|o|e|en|is|ilam|ilo|ile|ila)");
+                    "(.*(?:[^aeiou]|ai|[^aeiou]i|[^aeiou]e|ye))s(i|o|e|en|is|ilam|ilo|ile|ila)");
 
     /**
      * Lossy phonetic key of a Banglish word. Must stay in sync with bn_key/norm in
