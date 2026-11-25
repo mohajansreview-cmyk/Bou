@@ -110,6 +110,14 @@ public final class BouAiRewriter {
     }
 
     static String buildRequestBody(String banglish, String draft) throws Exception {
+        return buildRequestBody(banglish, draft, true);
+    }
+
+    /** Models that answered HTTP 400 to the thinking setting; they get the request without it. */
+    private static final java.util.Set<String> NO_THINKING_CONFIG =
+            java.util.Collections.newSetFromMap(new java.util.concurrent.ConcurrentHashMap<String, Boolean>());
+
+    static String buildRequestBody(String banglish, String draft, boolean thinking) throws Exception {
         JSONObject body = new JSONObject();
         body.put("systemInstruction", new JSONObject().put("parts",
                 new JSONArray().put(new JSONObject().put("text", INSTRUCTIONS))));
@@ -120,8 +128,11 @@ public final class BouAiRewriter {
                 .put("parts", new JSONArray().put(new JSONObject().put("text", user)))));
         // Least thinking and room to answer: thinking used to eat the whole budget, leaving no text.
         // Gemini 3 models reject thinkingBudget 0 with HTTP 400, so use thinkingLevel instead.
-        body.put("generationConfig", new JSONObject().put("temperature", 0).put("maxOutputTokens", 1024)
-                .put("thinkingConfig", new JSONObject().put("thinkingLevel", "minimal")));
+        JSONObject config = new JSONObject().put("temperature", 0).put("maxOutputTokens", 1024);
+        if (thinking) {
+            config.put("thinkingConfig", new JSONObject().put("thinkingLevel", "minimal"));
+        }
+        body.put("generationConfig", config);
         return body.toString();
     }
 
@@ -225,7 +236,8 @@ public final class BouAiRewriter {
             } else if (auth == 1) {
                 conn.setRequestProperty("Authorization", "Bearer " + apiKey);
             }
-            byte[] payload = buildRequestBody(banglish, draft).getBytes(StandardCharsets.UTF_8);
+            byte[] payload = buildRequestBody(banglish, draft, !NO_THINKING_CONFIG.contains(model))
+                    .getBytes(StandardCharsets.UTF_8);
             try (OutputStream os = conn.getOutputStream()) {
                 os.write(payload);
             }
@@ -253,6 +265,12 @@ public final class BouAiRewriter {
                     // keep the bare code
                 }
                 Log.w(TAG, "AI mode HTTP " + code + " " + reason);
+                if (code == 400 && reason.toLowerCase(java.util.Locale.ROOT).contains("thinking")
+                        && NO_THINKING_CONFIG.add(model)) {
+                    // This model refuses the thinking setting: ask again without it, once.
+                    conn.disconnect();
+                    return callWith(model, auth, apiKey, banglish, draft, timeoutMs);
+                }
                 throw new java.io.IOException("HTTP " + code + (reason.isEmpty() ? "" : ": " + reason));
             }
             try (InputStream in = conn.getInputStream()) {

@@ -63,6 +63,10 @@ Bou is free software under the **GNU GPL v3.0** (see [LICENSE](LICENSE)).
   Dave, from OpenSubtitles 2018 (CC BY-SA 4.0).
 - Regional words: **[ONUBAD](https://data.mendeley.com/datasets/6ft99kf89b/2)** by Nusrat Sultana,
   Rumana Yasmin, Bijon Mallik and Mohammad Shorif Uddin (CC BY 4.0).
+- Real Latin spellings of Bengali words: **[Aksharantar](https://huggingface.co/datasets/ai4bharat/Aksharantar)**
+  by AI4Bharat (CC BY 4.0), which includes the
+  **[Dakshina](https://github.com/google-research-datasets/dakshina)** lexicon by Google Research
+  (CC BY-SA 4.0). Wikipedia word frequencies: Bengali Wikipedia text from Dakshina (CC BY-SA 4.0).
 - Patching toolchain: the ReVanced and Morphe communities.
 
 Bou is not affiliated with or endorsed by Google. Gboard is a trademark of Google LLC.

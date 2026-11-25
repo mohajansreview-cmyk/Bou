@@ -55,6 +55,8 @@ public final class BanglishTransliterator {
             "late", "new", "old", "big", "line", "start", "stop", "check", "open", "close", "next"));
     /** Ranks at or above this come from the regional word list (see build_banglish_data.py). */
     private static final int REGIONAL_RANK_BASE = 50000;
+    /** Must match WIKI_RANK_BASE in tools/build_banglish_data.py. */
+    private static final int WIKI_RANK_BASE = 60000;
     /** A Bengali word must be this many times more frequent to beat an English reading. */
     private static final int BENGALI_RANK_FACTOR = 3;
 
@@ -176,6 +178,8 @@ public final class BanglishTransliterator {
         put(d, "shon", "শোন");
         put(d, "bakko", "বাক্য"); put(d, "bakkyo", "বাক্য"); put(d, "bakyo", "বাক্য");
         put(d, "ekoi", "একই"); put(d, "kate", "কাটে");
+        put(d, "bapare", "ব্যাপারে"); put(d, "byapare", "ব্যাপারে"); put(d, "bapar", "ব্যাপার");
+        put(d, "byapar", "ব্যাপার"); put(d, "mile", "মিলে");
         // Dhaka past tense written with "s": disi = দিছি (gave), not দিচ্ছি (giving).
         put(d, "disi", "দিছি"); put(d, "dise", "দিছে"); put(d, "diso", "দিছো");
         put(d, "nisi", "নিছি"); put(d, "nise", "নিছে"); put(d, "niso", "নিছো"); put(d, "deo", "দেও"); put(d, "dokan", "দোকান"); put(d, "ki", "কি");
@@ -216,7 +220,7 @@ public final class BanglishTransliterator {
                 // (pore, hoy, bole, mane...) are settled by frequency and come out Bengali.
                 "to", "a", "die", "hate", "more", "bad", "man", "tar", "ar", "kal", "ma", "re",
                 "boy", "tin", "sat", "tore", "she", "se", "or", "oke", "jai", "ja", "je", "hae", "ha",
-                "mane", "rate", "gate"}) {
+                "mane", "rate", "gate", "mile"}) {
             AMBIGUOUS.add(w);
         }
         for (String w : new String[] {
@@ -276,6 +280,8 @@ public final class BanglishTransliterator {
 
     private static volatile Map<String, Object[][]> bengaliByKey; // key -> {{word, rank}, ...}
     private static volatile Map<String, Integer> englishRank;
+    private static volatile Map<String, Object[]> exactSpelling; // latin -> {word, rank}
+    private static volatile Map<String, String> places; // Bangladesh place names
 
     private BanglishTransliterator() {
     }
@@ -495,13 +501,25 @@ public final class BanglishTransliterator {
             return new Word(start, latin, Decision.BENGALI, forced);
         }
         ensureLoaded();
+        // Bangladesh place names: Bengali inside a Bengali sentence, as written in an English one.
+        String place = places.get(w);
+        if (place != null) {
+            Word word = new Word(start, latin, Decision.AMBIGUOUS, place, false);
+            word.leanBengali = true;
+            return word;
+        }
         Integer en = englishRank.get(w);
         String known = DICTIONARY.get(w);
         if (known != null) {
             return new Word(start, latin,
                     AMBIGUOUS.contains(w) ? Decision.AMBIGUOUS : Decision.BENGALI, known);
         }
+        // Real spellings people write (exactSpelling) fill in only where the phonetic guess finds
+        // nothing: overriding a found word cost regional accuracy in tests.
         Object[] bn = lookupBengali(w, en == null);
+        if (bn == null) {
+            bn = exactSpelling.get(w);
+        }
         Object[] dialect = en == null ? lookupDhakaDialect(w) : null;
         // The ছ reading wins unless the literal "s" word is far more common (20x).
         if (dialect != null && (bn == null || (Integer) bn[1] * 20 > (Integer) dialect[1])) {
@@ -510,7 +528,7 @@ public final class BanglishTransliterator {
         // A regional Bengali word that is also a less common English word ("lay" = লায়)
         // follows its neighbours instead of always losing to English.
         boolean regionalVsEnglish = bn != null && en != null
-                && (Integer) bn[1] >= REGIONAL_RANK_BASE && en > 1000;
+                && (Integer) bn[1] >= REGIONAL_RANK_BASE && (Integer) bn[1] < WIKI_RANK_BASE && en > 1000;
         // Very common English words ("are", "he", "no") are rarely mixed into Bengali speech,
         // so when one has a Bengali reading (আরে, হে, নো) its neighbours decide. Loanwords people
         // do mix in (time, phone, call...) are listed in COMMON_LOANWORDS and stay English.
@@ -523,6 +541,12 @@ public final class BanglishTransliterator {
         }
         if (bn != null && en != null && (AMBIGUOUS.contains(w) || regionalVsEnglish)) {
             return new Word(start, latin, Decision.AMBIGUOUS, (String) bn[0]);
+        }
+        // Wikipedia-only words (often names) follow their neighbours like unknown words do.
+        if (bn != null && en == null && (Integer) bn[1] >= WIKI_RANK_BASE) {
+            Word wiki = new Word(start, latin, Decision.AMBIGUOUS, (String) bn[0], false);
+            wiki.leanBengali = true;
+            return wiki;
         }
         if (bn != null && (en == null || (Integer) bn[1] * BENGALI_RANK_FACTOR < en)) {
             return new Word(start, latin, Decision.BENGALI, (String) bn[0]);
@@ -544,6 +568,13 @@ public final class BanglishTransliterator {
     private static Object[] lookupBengali(String w, boolean allowLooseVowels) {
         String key = latinKey(w);
         Object[] best = pick(bengaliByKey.get(key), w);
+        // A leading "a" is often অ, which keys drop (anek -> অনেক): try the key without it too.
+        if (key.length() > 2 && key.charAt(0) == 'a' && !isVowel(key.charAt(1))) {
+            Object[] alt = pick(bengaliByKey.get(key.substring(1)), "o" + w.substring(1));
+            if (alt != null && (best == null || (Integer) alt[1] < (Integer) best[1])) {
+                best = alt;
+            }
+        }
         if (best != null || !allowLooseVowels) {
             return best;
         }
@@ -726,6 +757,22 @@ public final class BanglishTransliterator {
                     en.put(line.substring(0, tab), Integer.valueOf(line.substring(tab + 1)));
                 }
             }
+            Map<String, Object[]> exact = new HashMap<String, Object[]>(65536);
+            for (String chunk : BanglishWordData.exact()) {
+                for (String line : chunk.split("\n")) {
+                    String[] p = line.split("\t");
+                    exact.put(p[0], new Object[] {p[1], Integer.valueOf(p[2])});
+                }
+            }
+            Map<String, String> placeNames = new HashMap<String, String>(256);
+            for (String chunk : BanglishWordData.places()) {
+                for (String line : chunk.split("\n")) {
+                    String[] p = line.split("\t");
+                    placeNames.put(p[0], p[1]);
+                }
+            }
+            places = placeNames;
+            exactSpelling = exact;
             bengaliByKey = bn;
             englishRank = en;
         }

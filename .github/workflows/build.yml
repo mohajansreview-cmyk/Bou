@@ -20,13 +20,26 @@ jobs:
 
     steps:
       - name: Checkout Source Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up OpenJDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
+          cache: gradle
+          cache-dependency-path: |
+            pixelboard-patches/**/*.gradle*
+            pixelboard-patches/**/gradle-wrapper.properties
+
+      # Robolectric downloads a ~100 MB Android jar from Maven Central on every run; back-to-back
+      # runs (PR, then main) hit Maven Central's rate limit (HTTP 429). Keep the jar cached.
+      - name: Cache Robolectric Android jars
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/robolectric
+          key: robolectric-${{ hashFiles('pixelboard-patches/**/*.gradle*') }}
+          restore-keys: robolectric-
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
