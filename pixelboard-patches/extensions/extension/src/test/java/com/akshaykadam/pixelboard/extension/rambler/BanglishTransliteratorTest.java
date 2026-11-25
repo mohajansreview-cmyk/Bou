@@ -167,4 +167,16 @@ public final class BanglishTransliteratorTest {
         // long conjuncts
         Assert.assertEquals("বেশি বাক্য", BanglishTransliterator.convert("beshi bakkyo"));
     }
+
+    /** Real spellings, Wikipedia words and Bangladesh places (word data, 2026-11-26). */
+    @Test
+    public void wordDataCoversCommonAndBangladeshWords() {
+        Assert.assertEquals("আমি বাংলাদেশ এর মানুষ", BanglishTransliterator.convert("ami bangladesh er manush"));
+        Assert.assertEquals("আমার বাড়ি চট্টগ্রাম", BanglishTransliterator.convert("amar bari chittagong"));
+        Assert.assertEquals("I love Bangladesh", BanglishTransliterator.convert("I love Bangladesh"));
+        Assert.assertEquals("অনেক দিন পর দেখা হলো", BanglishTransliterator.convert("onek din por dekha holo"));
+        Assert.assertEquals("ব্যাপারে কি বলবো", BanglishTransliterator.convert("bapare ki bolbo"));
+        Assert.assertEquals("আমরা সবাই মিলে কাজ করবো", BanglishTransliterator.convert("amra shobai mile kaj korbo"));
+        Assert.assertEquals("উপজেলা পরিষদ", BanglishTransliterator.convert("upojela parishad"));
+    }
 }

@@ -42,6 +42,9 @@ public final class BouAiRewriterTest {
         JSONObject thinking = body.getJSONObject("generationConfig").getJSONObject("thinkingConfig");
         Assert.assertEquals("minimal", thinking.getString("thinkingLevel"));
         Assert.assertFalse(thinking.has("thinkingBudget"));
+        // Models that refuse the thinking setting get the same request without it.
+        JSONObject plain = new JSONObject(BouAiRewriter.buildRequestBody("ami", null, false));
+        Assert.assertFalse(plain.getJSONObject("generationConfig").has("thinkingConfig"));
     }
 
     @Test
