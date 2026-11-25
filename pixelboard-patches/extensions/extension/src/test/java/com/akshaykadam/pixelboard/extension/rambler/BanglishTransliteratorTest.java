@@ -142,4 +142,29 @@ public final class BanglishTransliteratorTest {
         Assert.assertTrue(BanglishTransliterator.containsBengali("ok আমি"));
         Assert.assertFalse(BanglishTransliterator.containsBengali("ok"));
     }
+
+    /** Mistakes the owner found in his own dictation on 2026-11-25. */
+    @Test
+    public void ownerSampleMistakesStayFixed() {
+        // Dhaka ছ written as "s" after an e: হয়েছে, দেখেছি, লিখেছি (not হয়েসে, দেখেসি)
+        Assert.assertEquals("AI কি ঠিক হয়েছে", BanglishTransliterator.convert("AI ki thik hoyese"));
+        Assert.assertEquals("এটা পরীক্ষা করে দেখেছি", BanglishTransliterator.convert("eta porikkha kore dekhesi"));
+        Assert.assertEquals("plan লিখেছি", BanglishTransliterator.convert("plan likhesi"));
+        // "ase" after a vowel stays আসে
+        Assert.assertEquals("সে আসে", BanglishTransliterator.convert("se ase"));
+        // hyphenated Bengali suffixes
+        Assert.assertEquals("তোমার সাতটা কথার", BanglishTransliterator.convert("tomar sat-ta kothar"));
+        Assert.assertEquals("একই file এ", BanglishTransliterator.convert("ek-oi file e"));
+        Assert.assertEquals("click-ই লাগবে না", BanglishTransliterator.convert("click-i lagbe na"));
+        // a Bengali word that is also an English name follows the sentence
+        Assert.assertEquals("5% কাটে। page খোলা free", BanglishTransliterator.convert("5% kate. page khola free"));
+        Assert.assertEquals("logo ar plan একই file এ আছে", BanglishTransliterator.convert("logo ar plan ek-oi file e ache"));
+        Assert.assertEquals("আমার logo টা ভালো", BanglishTransliterator.convert("amar logo ta valo"));
+        // product names stay English
+        Assert.assertEquals("github থেকে নতুন release", BanglishTransliterator.convert("github theke notun release"));
+        Assert.assertEquals("vercel এখন github এর সাথে যুক্ত", BanglishTransliterator.convert("vercel ekhon github er sathe jukto"));
+        Assert.assertEquals("app এ তোমার নাম", BanglishTransliterator.convert("app e tomar nam"));
+        // long conjuncts
+        Assert.assertEquals("বেশি বাক্য", BanglishTransliterator.convert("beshi bakkyo"));
+    }
 }
